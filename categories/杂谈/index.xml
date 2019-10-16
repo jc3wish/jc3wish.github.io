@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>杂谈 on jc3wish blog</title>
+    <link>https://jc3wish.github.io/categories/%E6%9D%82%E8%B0%88/</link>
+    <description>Recent content in 杂谈 on jc3wish blog</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en</language>
+    <lastBuildDate>Wed, 16 Oct 2019 22:24:26 +0800</lastBuildDate>
+    
+	<atom:link href="https://jc3wish.github.io/categories/%E6%9D%82%E8%B0%88/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>第一篇博客</title>
+      <link>https://jc3wish.github.io/post/my-first-blog/</link>
+      <pubDate>Wed, 16 Oct 2019 22:24:26 +0800</pubDate>
+      
+      <guid>https://jc3wish.github.io/post/my-first-blog/</guid>
+      <description>折腾了 hexo 不少时间,一直没真正用起来, 重点是那 nodejs ,npm 还有各种 依懒包的可能不兼容,太折腾人了 最终换成了 hugo 我也是一个委喜欢 golang 的人,还是支持下 hugo 吧 hugo 直</description>
+    </item>
+    
+  </channel>
+</rss>
