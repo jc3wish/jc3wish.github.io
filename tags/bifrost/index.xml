@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Bifrost on jc3wish blog</title>
+    <link>https://jc3wish.github.io/tags/bifrost/</link>
+    <description>Recent content in Bifrost on jc3wish blog</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en</language>
+    <lastBuildDate>Sun, 20 Oct 2019 23:26:08 +0800</lastBuildDate>
+    
+	<atom:link href="https://jc3wish.github.io/tags/bifrost/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>Bifrost 开发进度 20191020</title>
+      <link>https://jc3wish.github.io/post/bifrost_dev_20191020/</link>
+      <pubDate>Sun, 20 Oct 2019 23:26:08 +0800</pubDate>
+      
+      <guid>https://jc3wish.github.io/post/bifrost_dev_20191020/</guid>
+      <description>这个周末,总的时间加起来差不多有1天的时间在 对 Bifrost 进行开发 发行了一个 Bifrost_v1.1.0-beta.19 版本,这个版本可能会是一个比较阶段性比较重要的版本 主要功能如: 位点延时计</description>
+    </item>
+    
+  </channel>
+</rss>

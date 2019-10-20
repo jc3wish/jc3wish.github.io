@@ -1,0 +1,2 @@
+User-agent: *
+Sitemap: https://jc3wish.github.io/sitemap.xml

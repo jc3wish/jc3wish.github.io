@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Categories on jc3wish blog</title>
+    <link>https://jc3wish.github.io/categories/</link>
+    <description>Recent content in Categories on jc3wish blog</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en</language>
+    <lastBuildDate>Sun, 20 Oct 2019 23:26:08 +0800</lastBuildDate>
+    
+	<atom:link href="https://jc3wish.github.io/categories/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>Bifrost</title>
+      <link>https://jc3wish.github.io/categories/bifrost/</link>
+      <pubDate>Sun, 20 Oct 2019 23:26:08 +0800</pubDate>
+      
+      <guid>https://jc3wish.github.io/categories/bifrost/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>杂谈</title>
+      <link>https://jc3wish.github.io/categories/%E6%9D%82%E8%B0%88/</link>
+      <pubDate>Wed, 16 Oct 2019 22:24:26 +0800</pubDate>
+      
+      <guid>https://jc3wish.github.io/categories/%E6%9D%82%E8%B0%88/</guid>
+      <description></description>
+    </item>
+    
+  </channel>
+</rss>
