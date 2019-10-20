@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes" ?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
-    <title>Posts on jc3wish blog</title>
-    <link>https://jc3wish.github.io/post/</link>
-    <description>Recent content in Posts on jc3wish blog</description>
+    <title>Bifrost on jc3wish blog</title>
+    <link>https://jc3wish.github.io/categories/bifrost/</link>
+    <description>Recent content in Bifrost on jc3wish blog</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en</language>
     <lastBuildDate>Sun, 20 Oct 2019 23:26:08 +0800</lastBuildDate>
     
-	<atom:link href="https://jc3wish.github.io/post/index.xml" rel="self" type="application/rss+xml" />
+	<atom:link href="https://jc3wish.github.io/categories/bifrost/index.xml" rel="self" type="application/rss+xml" />
     
     
     <item>
@@ -18,15 +18,6 @@
       
       <guid>https://jc3wish.github.io/post/bifrost_dev_20191020/</guid>
       <description>这个周末,总的时间加起来差不多有1天的时间在 对 Bifrost 进行开发 发行了一个 Bifrost_v1.1.0-beta.19 版本,这个版本可能会是一个比较阶段性比较重要的版本 主要功能如: 位点延时计</description>
-    </item>
-    
-    <item>
-      <title>第一篇博客</title>
-      <link>https://jc3wish.github.io/post/my-first-blog/</link>
-      <pubDate>Wed, 16 Oct 2019 22:24:26 +0800</pubDate>
-      
-      <guid>https://jc3wish.github.io/post/my-first-blog/</guid>
-      <description>折腾了 hexo 不少时间,一直没真正用起来, 重点是那 nodejs ,npm 还有各种 依懒包的可能不兼容,太折腾人了 最终换成了 hugo 我也是一个委喜欢 golang 的人,还是支持下 hugo 吧 hugo 直</description>
     </item>
     
   </channel>
