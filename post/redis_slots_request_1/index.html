@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <title>Redis slots 槽的数量为什么是16384,而不是65535,也是不8192 ? - jc3wish blog</title>
+  <meta name="renderer" content="webkit" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+<meta name="theme-color" content="#f8f5ec" />
+<meta name="msapplication-navbutton-color" content="#f8f5ec">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="#f8f5ec">
+
+
+<meta name="author" content="jc3wish" /><meta name="description" content="昨天同事突然问了一个关于 Redis Cluster 的槽是怎么存储的,为什么槽的数量 是 16384 我突然有点蒙住了,因为以前没有认真关注过 Redis 3.0 的具体实现,以前也只去看过 Redis2.8 的主" /><meta name="keywords" content="Bifrost, Jc3wish" />
+
+
+
+
+
+
+<meta name="generator" content="Hugo 0.58.3 with theme even" />
+
+
+<link rel="canonical" href="https://jc3wish.github.io/post/redis_slots_request_1/" />
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+<link rel="manifest" href="/manifest.json">
+<link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5">
+
+
+<link href="/dist/even.c2a46f00.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@3.1.20/dist/jquery.fancybox.min.css" integrity="sha256-7TyXnr2YU040zfSP+rEcz29ggW4j56/ujTPwjMzyqFY=" crossorigin="anonymous">
+
+
+<meta property="og:title" content="Redis slots 槽的数量为什么是16384,而不是65535,也是不8192 ?" />
+<meta property="og:description" content="昨天同事突然问了一个关于 Redis Cluster 的槽是怎么存储的,为什么槽的数量 是 16384 我突然有点蒙住了,因为以前没有认真关注过 Redis 3.0 的具体实现,以前也只去看过 Redis2.8 的主" />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://jc3wish.github.io/post/redis_slots_request_1/" />
+<meta property="article:published_time" content="2019-11-06T23:05:25+08:00" />
+<meta property="article:modified_time" content="2019-11-06T23:05:25+08:00" />
+<meta itemprop="name" content="Redis slots 槽的数量为什么是16384,而不是65535,也是不8192 ?">
+<meta itemprop="description" content="昨天同事突然问了一个关于 Redis Cluster 的槽是怎么存储的,为什么槽的数量 是 16384 我突然有点蒙住了,因为以前没有认真关注过 Redis 3.0 的具体实现,以前也只去看过 Redis2.8 的主">
+
+
+<meta itemprop="datePublished" content="2019-11-06T23:05:25&#43;08:00" />
+<meta itemprop="dateModified" content="2019-11-06T23:05:25&#43;08:00" />
+<meta itemprop="wordCount" content="1108">
+
+
+
+<meta itemprop="keywords" content="Redis," />
+<meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="Redis slots 槽的数量为什么是16384,而不是65535,也是不8192 ?"/>
+<meta name="twitter:description" content="昨天同事突然问了一个关于 Redis Cluster 的槽是怎么存储的,为什么槽的数量 是 16384 我突然有点蒙住了,因为以前没有认真关注过 Redis 3.0 的具体实现,以前也只去看过 Redis2.8 的主"/>
+
+<!--[if lte IE 9]>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/classlist/1.1.20170427/classList.min.js"></script>
+<![endif]-->
+
+<!--[if lt IE 9]>
+  <script src="https://cdn.jsdelivr.net/npm/html5shiv@3.7.3/dist/html5shiv.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/respond.js@1.4.2/dest/respond.min.js"></script>
+<![endif]-->
+
+</head>
+<body>
+  <div id="mobile-navbar" class="mobile-navbar">
+  <div class="mobile-header-logo">
+    <a href="/" class="logo">Jc3wish</a>
+  </div>
+  <div class="mobile-navbar-icon">
+    <span></span>
+    <span></span>
+    <span></span>
+  </div>
+</div>
+<nav id="mobile-menu" class="mobile-menu slideout-menu">
+  <ul class="mobile-menu-list">
+    <a href="/">
+        <li class="mobile-menu-item">主页</li>
+      </a><a href="/post/">
+        <li class="mobile-menu-item">归档</li>
+      </a><a href="/tags/">
+        <li class="mobile-menu-item">标签</li>
+      </a><a href="/categories/">
+        <li class="mobile-menu-item">分类</li>
+      </a>
+  </ul>
+</nav>
+  <div class="container" id="mobile-panel">
+    <header id="header" class="header">
+        <div class="logo-wrapper">
+  <a href="/" class="logo">Jc3wish</a>
+</div>
+
+<nav class="site-navbar">
+  <ul id="menu" class="menu">
+    <li class="menu-item">
+        <a class="menu-item-link" href="/">主页</a>
+      </li><li class="menu-item">
+        <a class="menu-item-link" href="/post/">归档</a>
+      </li><li class="menu-item">
+        <a class="menu-item-link" href="/tags/">标签</a>
+      </li><li class="menu-item">
+        <a class="menu-item-link" href="/categories/">分类</a>
+      </li>
+  </ul>
+</nav>
+    </header>
+
+    <main id="main" class="main">
+      <div class="content-wrapper">
+        <div id="content" class="content">
+          <article class="post">
+    
+    <header class="post-header">
+      <h1 class="post-title">Redis slots 槽的数量为什么是16384,而不是65535,也是不8192 ?</h1>
+
+      <div class="post-meta">
+        <span class="post-time"> 2019-11-06 </span>
+        <div class="post-category">
+            <a href="/categories/redis/"> Redis </a>
+            </div>
+        
+      </div>
+    </header>
+
+    <div class="post-toc" id="post-toc">
+  <h2 class="post-toc-title">文章目录</h2>
+  <div class="post-toc-content always-active">
+    <nav id="TableOfContents">
+<ul>
+<li>
+<ul>
+<li>
+<ul>
+<li><a href="#1-为什么-slots-不选择用-16-bit-最大可存储的值-65535">1. 为什么 slots 不选择用 16 bit 最大可存储的值 65535</a></li>
+<li><a href="#2-为什么-slots-不选择用-8192-呢">2. 为什么 slots 不选择用  8192 呢?</a>
+<ul>
+<li>
+<ul>
+<li><a href="#备注">备注:</a></li>
+</ul></li>
+</ul></li>
+</ul></li>
+</ul></li>
+</ul>
+</nav>
+  </div>
+</div>
+    <div class="post-content">
+      
+
+<p>昨天同事突然问了一个关于 Redis Cluster 的槽是怎么存储的,为什么槽的数量 是 16384</p>
+
+<p>我突然有点蒙住了,因为以前没有认真关注过 Redis 3.0 的具体实现,以前也只去看过 Redis2.8 的主从及持久化相关的下结代码</p>
+
+<p>然后去研究了一下 Redis 3.0 的 slot 是咋回事</p>
+
+<h3 id="1-为什么-slots-不选择用-16-bit-最大可存储的值-65535">1. 为什么 slots 不选择用 16 bit 最大可存储的值 65535</h3>
+
+<p>Redis 每个实例节点上保存对应有哪些 slots 是一个 unsigned char slots[REDIS_CLUSTER_SLOTS/8] 类型</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span></pre></td>
+<td class="lntd">
+<pre class="chroma">typedef struct clusterNode {
+    mstime_t ctime; /* Node object creation time. */
+    char name[REDIS_CLUSTER_NAMELEN]; /* Node name, hex string, sha1-size */
+    int flags;      /* REDIS_NODE_... */
+    uint64_t configEpoch; /* Last configEpoch observed for this node */
+    unsigned char slots[REDIS_CLUSTER_SLOTS/8]; /* slots handled by this node */
+    int numslots;   /* Number of slots handled by this node */
+    int numslaves;  /* Number of slave nodes, if this is a master */
+    struct clusterNode **slaves; /* pointers to slave nodes */
+    struct clusterNode *slaveof; /* pointer to the master node */
+    mstime_t ping_sent;      /* Unix time we sent latest ping */
+    mstime_t pong_received;  /* Unix time we received the pong */
+    mstime_t fail_time;      /* Unix time when FAIL flag was set */
+    mstime_t voted_time;     /* Last time we voted for a slave of this master */
+    mstime_t repl_offset_time;  /* Unix time we received offset for this node */
+    long long repl_offset;      /* Last known repl offset for this node. */
+    char ip[REDIS_IP_STR_LEN];  /* Latest known IP address of this node */
+    int port;                   /* Latest known port of this node */
+    clusterLink *link;          /* TCP/IP link with this node */
+    list *fail_reports;         /* List of nodes signaling this as failing */
+} clusterNode;</pre></td></tr></table>
+</div>
+</div>
+<p>假如 slots 数量 是 65535</p>
+
+<p>65535 / 8(每个字节8bit) / 1024(1024个字节1kB) ≈ 8kB   (这个公式计算是因为存储是 bit来表示的)</p>
+
+<p>假如 slots 数量 是 16384</p>
+
+<p>16384 / 8(每个字节8bit) / 1024(1024个字节1kB) = 2kB</p>
+
+<p>换算了一下  16384 个 slots 的情况下比 65535 内存就要省 6 kB 左右(每个关例节点变量,假如一个集群有100个节点,那每个实例里就省了600kB)</p>
+
+<p>并且集群节点之前相互发送 PING 的心跳命令的时候,会进行传输一下节点的执行包, 主要这里还省了网络开销</p>
+
+<p>所以作者认为  16384 个 slots 足够用了</p>
+
+<h3 id="2-为什么-slots-不选择用-8192-呢">2. 为什么 slots 不选择用  8192 呢?</h3>
+
+<p>通过第一个问题的算法,就是省内存空间,省网络开销,那省一点是一点</p>
+
+<p>这个问题 搜索引擎 我也没搜索出来,好像没人关注过一样,大家都只在关注为什么不是65535.</p>
+
+<p>那为什么不用 8192 呢?</p>
+
+<p>16384 / 8(每个字节8bit) / 1024(1024个字节1kB) = 1kB</p>
+
+<p>8192 通过上面的公式得出来 只要开销 1kB</p>
+
+<p>那再来看看 Redis 把 Key 换算成所属 slots 的方法</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span></pre></td>
+<td class="lntd">
+<pre class="chroma">/* -----------------------------------------------------------------------------
+ * Key space handling
+ * -------------------------------------------------------------------------- */
+
+/* We have 16384 hash slots. The hash slot of a given key is obtained
+ * as the least significant 14 bits of the crc16 of the key.
+ *
+ * However if the key contains the {...} pattern, only the part between
+ * { and } is hashed. This may be useful in the future to force certain
+ * keys to be in the same node (assuming no resharding is in progress). */
+unsigned int keyHashSlot(char *key, int keylen) {
+    int s, e; /* start-end indexes of { and } */
+
+    for (s = 0; s &lt; keylen; s++)
+        if (key[s] == &#39;{&#39;) break;
+
+    /* No &#39;{&#39; ? Hash the whole key. This is the base case. */
+    if (s == keylen) return crc16(key,keylen) &amp; 0x3FFF;
+
+    /* &#39;{&#39; found? Check if we have the corresponding &#39;}&#39;. */
+    for (e = s+1; e &lt; keylen; e++)
+        if (key[e] == &#39;}&#39;) break;
+
+    /* No &#39;}&#39; or nothing betweeen {} ? Hash the whole key. */
+    if (e == keylen || e == s+1) return crc16(key,keylen) &amp; 0x3FFF;
+
+    /* If we are here there is both a { and a } on its right. Hash
+     * what is in the middle between { and }. */
+    return crc16(key+s+1,e-s-1) &amp; 0x3FFF;
+}</pre></td></tr></table>
+</div>
+</div>
+<p>Redis 将 key 换算成 slots 的方法 是将 crc16(key) 之后再和 slots 的数据 进行 与 计算(结果等价于取横)</p>
+
+<p>这个问题,我也纠结了半天,直到今晚在和一个朋友讨论结果是,可能是  crc16 出来结果, 后8位 碰撞概率比较大(当前仅限猜测)</p>
+
+<h5 id="备注">备注:</h5>
+
+<p>以上代码来源于 Redis3.0.1 版本</p>
+
+<p>感谢 @皇家救星 技术讨论</p>
+
+    </div>
+
+    <div class="post-copyright">
+  <p class="copyright-item">
+    <span class="item-title">文章作者</span>
+    <span class="item-content">jc3wish</span>
+  </p>
+  <p class="copyright-item">
+    <span class="item-title">上次更新</span>
+    <span class="item-content">
+        2019-11-06
+        
+    </span>
+  </p>
+  
+  
+</div>
+<footer class="post-footer">
+      <div class="post-tags">
+          <a href="/tags/redis/">Redis</a>
+          </div>
+      <nav class="post-nav">
+        
+        <a class="next" href="/post/bifrost_dev_20191020/">
+            <span class="next-text nav-default">Bifrost 开发进度 20191020</span>
+            <span class="next-text nav-mobile">下一篇</span>
+            <i class="iconfont icon-right"></i>
+          </a>
+      </nav>
+    </footer>
+  </article>
+        </div>
+        <div id="comments-gitment"></div>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/theme-next/theme-next-gitment@1/default.min.css" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/gh/theme-next/theme-next-gitment@1/gitment.browser.min.js" crossorigin="anonymous"></script>
+    <script type="text/javascript">
+      var gitment = new Gitment({
+        id: '2019-11-06 23:05:25 \x2b0800 CST',
+        title: 'Redis slots 槽的数量为什么是16384,而不是65535,也是不8192 ?',
+        link: decodeURI(location.href),
+        desc: '昨天同事突然问了一个关于 Redis Cluster 的槽是怎么存储的,为什么槽的数量 是 16384 我突然有点蒙住了,因为以前没有认真关注过 Redis 3.0 的具体实现,以前也只去看过 Redis2.8 的主',
+        owner: 'jc3wish',
+        repo: 'jc3wish.github.io.comment',
+        oauth: {
+          client_id: '',
+          client_secret: ''
+        }
+      });
+      gitment.render('comments-gitment');
+    </script>
+    <noscript>Please enable JavaScript to view the <a href="https://github.com/imsun/gitment">comments powered by gitment.</a></noscript>
+
+  
+
+  
+
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="social-links">
+      <a href="mailto:jc3wish@126.com" class="iconfont icon-email" title="email"></a>
+      <a href="https://github.com/jc3wish" class="iconfont icon-github" title="github"></a>
+  <a href="https://jc3wish.github.io/index.xml" type="application/rss+xml" class="iconfont icon-rss" title="rss"></a>
+</div>
+
+<div class="copyright">
+  <span class="power-by">
+    由 <a class="hexo-link" href="https://gohugo.io">Hugo</a> 强力驱动
+  </span>
+  <span class="division">|</span>
+  <span class="theme-info">
+    主题 - 
+    <a class="theme-link" href="https://github.com/olOwOlo/hugo-theme-even">Even</a>
+  </span>
+
+  
+
+  <span class="copyright-year">
+    &copy; 
+    2019
+    <span class="heart">
+      <i class="iconfont icon-heart"></i>
+    </span>
+    <span class="author">jc3wish</span>
+  </span>
+</div>
+    </footer>
+
+    <div class="back-to-top" id="back-to-top">
+      <i class="iconfont icon-up"></i>
+    </div>
+  </div>
+  
+  <script src="https://cdn.jsdelivr.net/npm/jquery@3.2.1/dist/jquery.min.js" integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4=" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/slideout@1.0.1/dist/slideout.min.js" integrity="sha256-t+zJ/g8/KXIJMjSVQdnibt4dlaDxc9zXr/9oNPeWqdg=" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@3.1.20/dist/jquery.fancybox.min.js" integrity="sha256-XVLffZaxoWfGUEbdzuLi7pwaUJv1cecsQJQqGLe7axY=" crossorigin="anonymous"></script>
+<script type="text/javascript" src="/dist/even.26188efa.min.js"></script>
+
+
+
+
+
+
+
+
+</body>
+</html>

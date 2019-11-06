@@ -6,10 +6,19 @@
     <description>Recent content on jc3wish blog</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en</language>
-    <lastBuildDate>Sun, 20 Oct 2019 23:26:08 +0800</lastBuildDate>
+    <lastBuildDate>Wed, 06 Nov 2019 23:05:25 +0800</lastBuildDate>
     
 	<atom:link href="https://jc3wish.github.io/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>Redis slots 槽的数量为什么是16384,而不是65535,也是不8192 ?</title>
+      <link>https://jc3wish.github.io/post/redis_slots_request_1/</link>
+      <pubDate>Wed, 06 Nov 2019 23:05:25 +0800</pubDate>
+      
+      <guid>https://jc3wish.github.io/post/redis_slots_request_1/</guid>
+      <description>昨天同事突然问了一个关于 Redis Cluster 的槽是怎么存储的,为什么槽的数量 是 16384 我突然有点蒙住了,因为以前没有认真关注过 Redis 3.0 的具体实现,以前也只去看过 Redis2.8 的主</description>
+    </item>
     
     <item>
       <title>Bifrost 开发进度 20191020</title>

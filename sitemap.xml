@@ -2,6 +2,55 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   
   <url>
+    <loc>https://jc3wish.github.io/categories/</loc>
+    <lastmod>2019-11-06T23:05:25+08:00</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  
+  <url>
+    <loc>https://jc3wish.github.io/</loc>
+    <lastmod>2019-11-06T23:05:25+08:00</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  
+  <url>
+    <loc>https://jc3wish.github.io/post/</loc>
+    <lastmod>2019-11-06T23:05:25+08:00</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  
+  <url>
+    <loc>https://jc3wish.github.io/tags/redis/</loc>
+    <lastmod>2019-11-06T23:05:25+08:00</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  
+  <url>
+    <loc>https://jc3wish.github.io/categories/redis/</loc>
+    <lastmod>2019-11-06T23:05:25+08:00</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  
+  <url>
+    <loc>https://jc3wish.github.io/post/redis_slots_request_1/</loc>
+    <lastmod>2019-11-06T23:05:25+08:00</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  
+  <url>
+    <loc>https://jc3wish.github.io/tags/</loc>
+    <lastmod>2019-11-06T23:05:25+08:00</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  
+  <url>
     <loc>https://jc3wish.github.io/categories/bifrost/</loc>
     <lastmod>2019-10-20T23:26:08+08:00</lastmod>
     <changefreq>weekly</changefreq>
@@ -23,34 +72,6 @@
   </url>
   
   <url>
-    <loc>https://jc3wish.github.io/categories/</loc>
-    <lastmod>2019-10-20T23:26:08+08:00</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.5</priority>
-  </url>
-  
-  <url>
-    <loc>https://jc3wish.github.io/</loc>
-    <lastmod>2019-10-20T23:26:08+08:00</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.5</priority>
-  </url>
-  
-  <url>
-    <loc>https://jc3wish.github.io/post/</loc>
-    <lastmod>2019-10-20T23:26:08+08:00</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.5</priority>
-  </url>
-  
-  <url>
-    <loc>https://jc3wish.github.io/tags/</loc>
-    <lastmod>2019-10-20T23:26:08+08:00</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.5</priority>
-  </url>
-  
-  <url>
     <loc>https://jc3wish.github.io/tags/%E8%BF%9B%E5%BA%A6/</loc>
     <lastmod>2019-10-20T23:26:08+08:00</lastmod>
     <changefreq>weekly</changefreq>
@@ -58,14 +79,14 @@
   </url>
   
   <url>
-    <loc>https://jc3wish.github.io/categories/%E6%9D%82%E8%B0%88/</loc>
+    <loc>https://jc3wish.github.io/tags/%E6%9D%82%E8%B0%88/</loc>
     <lastmod>2019-10-16T22:24:26+08:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.5</priority>
   </url>
   
   <url>
-    <loc>https://jc3wish.github.io/tags/%E6%9D%82%E8%B0%88/</loc>
+    <loc>https://jc3wish.github.io/categories/%E6%9D%82%E8%B0%88/</loc>
     <lastmod>2019-10-16T22:24:26+08:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.5</priority>
