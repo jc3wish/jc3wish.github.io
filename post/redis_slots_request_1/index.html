@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-  <title>Redis slots 槽的数量为什么是16384,而不是65535,也是不8192 ? - jc3wish blog</title>
+  <title>Redis slots 槽的数量为什么是16384,而不是65536,也是不8192 ? - jc3wish blog</title>
   <meta name="renderer" content="webkit" />
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
 
@@ -38,25 +38,25 @@
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@3.1.20/dist/jquery.fancybox.min.css" integrity="sha256-7TyXnr2YU040zfSP+rEcz29ggW4j56/ujTPwjMzyqFY=" crossorigin="anonymous">
 
 
-<meta property="og:title" content="Redis slots 槽的数量为什么是16384,而不是65535,也是不8192 ?" />
+<meta property="og:title" content="Redis slots 槽的数量为什么是16384,而不是65536,也是不8192 ?" />
 <meta property="og:description" content="昨天同事突然问了一个关于 Redis Cluster 的槽是怎么存储的,为什么槽的数量 是 16384 我突然有点蒙住了,因为以前没有认真关注过 Redis 3.0 的具体实现,以前也只去看过 Redis2.8 的主" />
 <meta property="og:type" content="article" />
 <meta property="og:url" content="https://jc3wish.github.io/post/redis_slots_request_1/" />
 <meta property="article:published_time" content="2019-11-06T23:05:25+08:00" />
 <meta property="article:modified_time" content="2019-11-06T23:05:25+08:00" />
-<meta itemprop="name" content="Redis slots 槽的数量为什么是16384,而不是65535,也是不8192 ?">
+<meta itemprop="name" content="Redis slots 槽的数量为什么是16384,而不是65536,也是不8192 ?">
 <meta itemprop="description" content="昨天同事突然问了一个关于 Redis Cluster 的槽是怎么存储的,为什么槽的数量 是 16384 我突然有点蒙住了,因为以前没有认真关注过 Redis 3.0 的具体实现,以前也只去看过 Redis2.8 的主">
 
 
 <meta itemprop="datePublished" content="2019-11-06T23:05:25&#43;08:00" />
 <meta itemprop="dateModified" content="2019-11-06T23:05:25&#43;08:00" />
-<meta itemprop="wordCount" content="1108">
+<meta itemprop="wordCount" content="1549">
 
 
 
 <meta itemprop="keywords" content="Redis," />
 <meta name="twitter:card" content="summary"/>
-<meta name="twitter:title" content="Redis slots 槽的数量为什么是16384,而不是65535,也是不8192 ?"/>
+<meta name="twitter:title" content="Redis slots 槽的数量为什么是16384,而不是65536,也是不8192 ?"/>
 <meta name="twitter:description" content="昨天同事突然问了一个关于 Redis Cluster 的槽是怎么存储的,为什么槽的数量 是 16384 我突然有点蒙住了,因为以前没有认真关注过 Redis 3.0 的具体实现,以前也只去看过 Redis2.8 的主"/>
 
 <!--[if lte IE 9]>
@@ -120,7 +120,7 @@
           <article class="post">
     
     <header class="post-header">
-      <h1 class="post-title">Redis slots 槽的数量为什么是16384,而不是65535,也是不8192 ?</h1>
+      <h1 class="post-title">Redis slots 槽的数量为什么是16384,而不是65536,也是不8192 ?</h1>
 
       <div class="post-meta">
         <span class="post-time"> 2019-11-06 </span>
@@ -140,13 +140,10 @@
 <ul>
 <li>
 <ul>
-<li><a href="#1-为什么-slots-不选择用-16-bit-最大可存储的值-65535">1. 为什么 slots 不选择用 16 bit 最大可存储的值 65535</a></li>
+<li><a href="#1-为什么-slots-不选择用-65536">1. 为什么 slots 不选择用 65536</a></li>
 <li><a href="#2-为什么-slots-不选择用-8192-呢">2. 为什么 slots 不选择用  8192 呢?</a>
 <ul>
-<li>
-<ul>
 <li><a href="#备注">备注:</a></li>
-</ul></li>
 </ul></li>
 </ul></li>
 </ul></li>
@@ -163,7 +160,7 @@
 
 <p>然后去研究了一下 Redis 3.0 的 slot 是咋回事</p>
 
-<h3 id="1-为什么-slots-不选择用-16-bit-最大可存储的值-65535">1. 为什么 slots 不选择用 16 bit 最大可存储的值 65535</h3>
+<h3 id="1-为什么-slots-不选择用-65536">1. 为什么 slots 不选择用 65536</h3>
 
 <p>Redis 每个实例节点上保存对应有哪些 slots 是一个 unsigned char slots[REDIS_CLUSTER_SLOTS/8] 类型</p>
 <div class="highlight"><div class="chroma">
@@ -214,9 +211,9 @@
 } clusterNode;</pre></td></tr></table>
 </div>
 </div>
-<p>假如 slots 数量 是 65535</p>
+<p>假如 slots 数量 是 65536</p>
 
-<p>65535 / 8(每个字节8bit) / 1024(1024个字节1kB) ≈ 8kB   (这个公式计算是因为存储是 bit来表示的)</p>
+<p>65536 / 8(每个字节8bit) / 1024(1024个字节1kB) = 8kB   (这个公式计算是因为存储是 bit来表示的)</p>
 
 <p>假如 slots 数量 是 16384</p>
 
@@ -224,15 +221,29 @@
 
 <p>换算了一下  16384 个 slots 的情况下比 65535 内存就要省 6 kB 左右(每个关例节点变量,假如一个集群有100个节点,那每个实例里就省了600kB)</p>
 
-<p>并且集群节点之前相互发送 PING 的心跳命令的时候,会进行传输一下节点的执行包, 主要这里还省了网络开销</p>
+<p>重点是 Redis 集群节点之间每秒都会发送 PING 的心跳命令的时候,并传输 slofs 信息,规律如下:</p>
 
-<p>所以作者认为  16384 个 slots 足够用了</p>
+<p>(1)每秒会随机选取5个最久没有通信的节点 并且发送 PING 消息</p>
+
+<p>(2)每100毫秒(1秒10次) 扫描本地节点列表，如果发现节点最近一次接受 PONG 消息的时间大于cluster-node-timeout/2 则立刻发送 PING 消息,cluster-node-timeout 默认值 15 秒</p>
+
+<p>假如一个 Redis 集群有 200 个节点,不考滤其他压缩及其他数据等的情况下, 粗略算一下 每秒发送 PING 消息网络流量</p>
+
+<p>采用 65536 个 slots</p>
+
+<p>200 * 5 * 8KB = 8000KB, 那约等于8MB,换成交换机流量 小b 计算的话,就是 64Mb</p>
+
+<p>采用 16384 个 slots</p>
+
+<p>200 * 5 * 2KB = 2000KB, 那约等于2MB,换成交换机流量 小b 计算的话,就是 16Mb</p>
+
+<p>这样算下来,每秒可以省 48Mb 的网络流量</p>
 
 <h3 id="2-为什么-slots-不选择用-8192-呢">2. 为什么 slots 不选择用  8192 呢?</h3>
 
 <p>通过第一个问题的算法,就是省内存空间,省网络开销,那省一点是一点</p>
 
-<p>这个问题 搜索引擎 我也没搜索出来,好像没人关注过一样,大家都只在关注为什么不是65535.</p>
+<p>这个问题 搜索引擎 我也没搜索出来,好像没人关注过一样,大家都只在关注为什么不是65536.</p>
 
 <p>那为什么不用 8192 呢?</p>
 
@@ -307,15 +318,27 @@ unsigned int keyHashSlot(char *key, int keylen) {
 }</pre></td></tr></table>
 </div>
 </div>
-<p>Redis 将 key 换算成 slots 的方法 是将 crc16(key) 之后再和 slots 的数据 进行 与 计算(结果等价于取横)</p>
+<p>Redis 将 key 换算成 slots 的方法 是将 crc16(key) 之后再和 slots 的数量 进行 与 计算</p>
 
-<p>这个问题,我也纠结了半天,直到今晚在和一个朋友讨论结果是,可能是  crc16 出来结果, 后8位 碰撞概率比较大(当前仅限猜测)</p>
+<p>这里说明下,这里为什么是用  0x3FFF(16383) 来计算,而不是16384,是因为 在不产生溢出的情况下 x % (2^n) 等价于 x &amp; (2^n - 1) 即  x % 16384 == x &amp; 16383</p>
 
-<h5 id="备注">备注:</h5>
+<p>这里为什么不用8192</p>
+
+<p>crc16 出来结果,理论上出现重复的概率为  <sup>1</sup>&frasl;<sub>65536</sub></p>
+
+<p>但实际结果重复概率可能比这个大不少,就像crc32 结果 理论上 1/40亿 分之一,但实际有人测下来10万碰撞的概率就比较大了</p>
+
+<p>假如 slots 设置成 8192, 200个实例的节点情况下,理论值是 每40个不同key请求,命中就会失效一次,假如节点数增加到400,那就是20个请求</p>
+
+<p>只是理论值,实际上可能概率会更大</p>
+
+<p>并且1kb 并不会比 2k 省太多,性价比不是特别高,所以可能 选 16384 会更为通用一点</p>
+
+<h4 id="备注">备注:</h4>
 
 <p>以上代码来源于 Redis3.0.1 版本</p>
 
-<p>感谢 @皇家救星 技术讨论</p>
+<p>感谢 @皇家救星 技术讨论与技术支持</p>
 
     </div>
 
@@ -355,7 +378,7 @@ unsigned int keyHashSlot(char *key, int keylen) {
     <script type="text/javascript">
       var gitment = new Gitment({
         id: '2019-11-06 23:05:25 \x2b0800 CST',
-        title: 'Redis slots 槽的数量为什么是16384,而不是65535,也是不8192 ?',
+        title: 'Redis slots 槽的数量为什么是16384,而不是65536,也是不8192 ?',
         link: decodeURI(location.href),
         desc: '昨天同事突然问了一个关于 Redis Cluster 的槽是怎么存储的,为什么槽的数量 是 16384 我突然有点蒙住了,因为以前没有认真关注过 Redis 3.0 的具体实现,以前也只去看过 Redis2.8 的主',
         owner: 'jc3wish',
