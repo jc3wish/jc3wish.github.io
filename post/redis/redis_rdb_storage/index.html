@@ -1,0 +1,898 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <title>Redis RDB 存储协议 - jc3wish blog</title>
+  <meta name="renderer" content="webkit" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+<meta name="theme-color" content="#f8f5ec" />
+<meta name="msapplication-navbutton-color" content="#f8f5ec">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="#f8f5ec">
+
+
+<meta name="author" content="jc3wish" /><meta name="description" content="内容 字节数 案例 备注 RDB版本号 9 REDIS0006 数据库类型 1 254 254 代表后面跟着的存储是数据第几个数据库，比如，0,1-16 第几个数据库 1-5 0 参数Redis RD" /><meta name="keywords" content="Bifrost, Jc3wish" />
+
+
+
+
+
+
+<meta name="generator" content="Hugo 0.59.1 with theme even" />
+
+
+<link rel="canonical" href="https://jc3wish.github.io/post/redis/redis_rdb_storage/" />
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+<link rel="manifest" href="/manifest.json">
+<link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5">
+
+
+<link href="/dist/even.c2a46f00.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@3.1.20/dist/jquery.fancybox.min.css" integrity="sha256-7TyXnr2YU040zfSP+rEcz29ggW4j56/ujTPwjMzyqFY=" crossorigin="anonymous">
+
+
+<meta property="og:title" content="Redis RDB 存储协议" />
+<meta property="og:description" content="内容 字节数 案例 备注 RDB版本号 9 REDIS0006 数据库类型 1 254 254 代表后面跟着的存储是数据第几个数据库，比如，0,1-16 第几个数据库 1-5 0 参数Redis RD" />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://jc3wish.github.io/post/redis/redis_rdb_storage/" />
+<meta property="article:published_time" content="2019-12-02T23:38:26+08:00" />
+<meta property="article:modified_time" content="2019-12-02T23:38:26+08:00" />
+<meta itemprop="name" content="Redis RDB 存储协议">
+<meta itemprop="description" content="内容 字节数 案例 备注 RDB版本号 9 REDIS0006 数据库类型 1 254 254 代表后面跟着的存储是数据第几个数据库，比如，0,1-16 第几个数据库 1-5 0 参数Redis RD">
+
+
+<meta itemprop="datePublished" content="2019-12-02T23:38:26&#43;08:00" />
+<meta itemprop="dateModified" content="2019-12-02T23:38:26&#43;08:00" />
+<meta itemprop="wordCount" content="1549">
+
+
+
+<meta itemprop="keywords" content="Redis," />
+<meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="Redis RDB 存储协议"/>
+<meta name="twitter:description" content="内容 字节数 案例 备注 RDB版本号 9 REDIS0006 数据库类型 1 254 254 代表后面跟着的存储是数据第几个数据库，比如，0,1-16 第几个数据库 1-5 0 参数Redis RD"/>
+
+<!--[if lte IE 9]>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/classlist/1.1.20170427/classList.min.js"></script>
+<![endif]-->
+
+<!--[if lt IE 9]>
+  <script src="https://cdn.jsdelivr.net/npm/html5shiv@3.7.3/dist/html5shiv.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/respond.js@1.4.2/dest/respond.min.js"></script>
+<![endif]-->
+
+</head>
+<body>
+  <div id="mobile-navbar" class="mobile-navbar">
+  <div class="mobile-header-logo">
+    <a href="/" class="logo">Jc3wish</a>
+  </div>
+  <div class="mobile-navbar-icon">
+    <span></span>
+    <span></span>
+    <span></span>
+  </div>
+</div>
+<nav id="mobile-menu" class="mobile-menu slideout-menu">
+  <ul class="mobile-menu-list">
+    <a href="/">
+        <li class="mobile-menu-item">主页</li>
+      </a><a href="/post/">
+        <li class="mobile-menu-item">归档</li>
+      </a><a href="/tags/">
+        <li class="mobile-menu-item">标签</li>
+      </a><a href="/categories/">
+        <li class="mobile-menu-item">分类</li>
+      </a>
+  </ul>
+</nav>
+  <div class="container" id="mobile-panel">
+    <header id="header" class="header">
+        <div class="logo-wrapper">
+  <a href="/" class="logo">Jc3wish</a>
+</div>
+
+<nav class="site-navbar">
+  <ul id="menu" class="menu">
+    <li class="menu-item">
+        <a class="menu-item-link" href="/">主页</a>
+      </li><li class="menu-item">
+        <a class="menu-item-link" href="/post/">归档</a>
+      </li><li class="menu-item">
+        <a class="menu-item-link" href="/tags/">标签</a>
+      </li><li class="menu-item">
+        <a class="menu-item-link" href="/categories/">分类</a>
+      </li>
+  </ul>
+</nav>
+    </header>
+
+    <main id="main" class="main">
+      <div class="content-wrapper">
+        <div id="content" class="content">
+          <article class="post">
+    
+    <header class="post-header">
+      <h1 class="post-title">Redis RDB 存储协议</h1>
+
+      <div class="post-meta">
+        <span class="post-time"> 2019-12-02 </span>
+        <div class="post-category">
+            <a href="/categories/redis/"> Redis </a>
+            </div>
+        
+      </div>
+    </header>
+
+    <div class="post-toc" id="post-toc">
+  <h2 class="post-toc-title">文章目录</h2>
+  <div class="post-toc-content always-active">
+    <nav id="TableOfContents">
+<ul>
+<li>
+<ul>
+<li>
+<ul>
+<li>
+<ul>
+<li><a href="#redis-rdb数据不定长数据存储协议">Redis RDB数据不定长数据存储协议</a></li>
+<li><a href="#rdb-key数据存储">RDB Key数据存储</a>
+<ul>
+<li><a href="#key-是int类型">Key 是int类型</a></li>
+</ul></li>
+<li><a href="#rdb-string-存储">RDB String 存储</a>
+<ul>
+<li><a href="#rdb-string-存储-lzf-压缩">RDB String 存储 - LZF 压缩</a></li>
+<li><a href="#rdb-string-存储-普通存储">RDB String 存储 - 普通存储</a></li>
+</ul></li>
+<li><a href="#rdb-value-存储">RDB Value 存储</a>
+<ul>
+<li><a href="#rdb-value-存储-redis-list">RDB value 存储 - REDIS_LIST</a></li>
+<li><a href="#rdb-value-存储-redis-list-redis-encoding-linkedlist">RDB value 存储 - REDIS_LIST - REDIS_ENCODING_LINKEDLIST</a></li>
+<li><a href="#rdb-value-存储-redis-set">RDB value 存储 - REDIS_SET</a>
+<ul>
+<li><a href="#rdb-value-存储-redis-set-redis-encoding-ht">RDB value 存储 - REDIS_SET - REDIS_ENCODING_HT</a></li>
+</ul></li>
+<li><a href="#rdb-value-存储-redis-zset">RDB value 存储 - REDIS_ZSET</a></li>
+<li><a href="#rdb-value-存储-redis-hash">RDB value 存储 - REDIS_HASH</a></li>
+<li><a href="#rdb-value-存储-redis-hash-redis-encoding-ht">RDB value 存储 - REDIS_HASH- REDIS_ENCODING_HT</a></li>
+</ul></li>
+</ul></li>
+</ul></li>
+</ul></li>
+</ul>
+</nav>
+  </div>
+</div>
+    <div class="post-content">
+      
+
+<table>
+<thead>
+<tr>
+<th>内容</th>
+<th>字节数</th>
+<th>案例</th>
+<th>备注</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td>RDB版本号</td>
+<td>9</td>
+<td>REDIS0006</td>
+<td></td>
+</tr>
+
+<tr>
+<td>数据库类型</td>
+<td>1</td>
+<td>254</td>
+<td>254 代表后面跟着的存储是数据第几个数据库，比如，0,1-16</td>
+</tr>
+
+<tr>
+<td>第几个数据库</td>
+<td>1-5</td>
+<td>0</td>
+<td>参数Redis   RDB数据不定长数据存储协议假如那一个数据库没有数据，则不会存储</td>
+</tr>
+
+<tr>
+<td>数据类型是否过期key</td>
+<td>1</td>
+<td>252</td>
+<td>假如key是没有配置expair 的，则没有这个</td>
+</tr>
+
+<tr>
+<td>key过期时间</td>
+<td>8</td>
+<td>1574393426366</td>
+<td></td>
+</tr>
+
+<tr>
+<td>val 数据类型</td>
+<td>1  </td>
+<td></td>
+<td>#define REDIS_RDB_TYPE_STRING 0<br/>#define REDIS_RDB_TYPE_LIST   1<br/>#define REDIS_RDB_TYPE_SET    2#<br/>define REDIS_RDB_TYPE_ZSET   3<br/>#define REDIS_RDB_TYPE_HASH   4<br/>/* Object types for encoded objects. */<br/>#define REDIS_RDB_TYPE_HASH_ZIPMAP    9#<br/>define REDIS_RDB_TYPE_LIST_ZIPLIST  10<br/>#define REDIS_RDB_TYPE_SET_INTSET    11<br/>#define REDIS_RDB_TYPE_ZSET_ZIPLIST  12<br/>#define REDIS_RDB_TYPE_HASH_ZIPLIST  13</td>
+</tr>
+
+<tr>
+<td>Key 数据存储</td>
+<td>N  </td>
+<td></td>
+<td>参考 RDB Key数据存储</td>
+</tr>
+
+<tr>
+<td>Val 数据存储</td>
+<td>N  </td>
+<td></td>
+<td>因为val有可能是int，也有可能是 list　等类型，假如是 list</td>
+</tr>
+</tbody>
+</table>
+
+<p>等类型都是优先转成string之后再参考 RDB String 存储
+&hellip;.        |       |       |
+结束标识     |      1          | 255                |
+Cksum值     |      8         |                       |  当开启了 rdbchecksum yes 才有</p>
+
+<h4 id="redis-rdb数据不定长数据存储协议">Redis RDB数据不定长数据存储协议</h4>
+
+<p>假如接下来要存储的长度为 x
+x &lt; 64 代表这一个字节的长度就是接下来存储数据的长度 就是x
+64&lt;= x &lt; 16384 , 则接下来第一个字节存储的是64，并且接下来的另一个字节以  len&amp;0xFF 数据存储. 意味着，当接下来的数据长度 64&lt;= x &lt; 16384 , 是用2个字节来存储的
+x &gt;=16384 ，则则第一个字节存储的是255，并且接下来的4个字节存储的是  x，代表数据长度 x &gt;=16384 是用 5个字节来存储的</p>
+
+<h4 id="rdb-key数据存储">RDB Key数据存储</h4>
+
+<h5 id="key-是int类型">Key 是int类型</h5>
+
+<p>当 -128 &lt;= x &lt;=127 ，采用2个字节存储</p>
+
+<table>
+<thead>
+<tr>
+<th>标题</th>
+<th>长度</th>
+<th>案例</th>
+<th>备注</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td>第1个字节</td>
+<td>1</td>
+<td>192</td>
+<td>(3&lt;&lt;6)或者0</td>
+</tr>
+
+<tr>
+<td>第2个字节</td>
+<td>1</td>
+<td></td>
+<td>X &amp; 255 value&amp;0xFF</td>
+</tr>
+</tbody>
+</table>
+
+<p>当 -32768 &lt;= x &lt;=32767，采用3个字节存储</p>
+
+<table>
+<thead>
+<tr>
+<th>标题</th>
+<th>长度</th>
+<th>案例</th>
+<th>备注</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td>第1个字节</td>
+<td>1</td>
+<td>193</td>
+<td>193 (3&lt;&lt;6)或者 1</td>
+</tr>
+
+<tr>
+<td>第2-3个字节</td>
+<td>2</td>
+<td>x</td>
+<td></td>
+</tr>
+</tbody>
+</table>
+
+<p>       </p>
+
+<p>当 -2147483648&lt;= x &lt;=2147483647，采用5个字节存储</p>
+
+<table>
+<thead>
+<tr>
+<th>标题</th>
+<th>长度</th>
+<th>案例</th>
+<th>备注</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td>第1个字节</td>
+<td>1</td>
+<td>194</td>
+<td>(3&lt;&lt;6)或2</td>
+</tr>
+
+<tr>
+<td>第2-5个字节</td>
+<td>4</td>
+<td>2147483647</td>
+<td> </td>
+</tr>
+</tbody>
+</table>
+
+<p>       </p>
+
+<p>当 x 超过了有符号的4个字节存储的大小，则转成string 存储 , 请参考 RDB String存储</p>
+
+<h4 id="rdb-string-存储">RDB String 存储</h4>
+
+<p>当string 长度 小于或等于 11 会尝试转成 32位的数字 进行存储 参考  RDB Key数据存储</p>
+
+<p>否则进入下面逻辑</p>
+
+<p>假如 rdbcompression yes 开启了，则在 len &gt; 20的时候，会进行LZF 压缩算法</p>
+
+<h5 id="rdb-string-存储-lzf-压缩">RDB String 存储 - LZF 压缩</h5>
+
+<table>
+<thead>
+<tr>
+<th>标题</th>
+<th>长度</th>
+<th>案例</th>
+<th>备注</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td>类型存储</td>
+<td>1</td>
+<td>195</td>
+<td>(3&lt;&lt;6)或3 ，表示接下来的数据是LZF压缩的</td>
+</tr>
+
+<tr>
+<td>压缩过后的长度</td>
+<td>N</td>
+<td>comprlen</td>
+<td>参考 Redis RDB数据不定长数据存储协议</td>
+</tr>
+
+<tr>
+<td>压缩前的长度</td>
+<td>N  </td>
+<td></td>
+<td>参考 Redis RDB数据不定长数据存储协议</td>
+</tr>
+
+<tr>
+<td>压缩过后的内容</td>
+<td>comprlen</td>
+<td></td>
+<td>长度是comprlen,压缩过后的内容</td>
+</tr>
+</tbody>
+</table>
+
+<p>       </p>
+
+<h5 id="rdb-string-存储-普通存储">RDB String 存储 - 普通存储</h5>
+
+<table>
+<thead>
+<tr>
+<th>标题</th>
+<th>长度</th>
+<th>案例</th>
+<th>备注</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td>长度存储</td>
+<td>1-5</td>
+<td>16</td>
+<td>参考 Redis RDB数据不定长数据存储协议</td>
+</tr>
+
+<tr>
+<td>String内容</td>
+<td>N</td>
+<td>MyTestVale</td>
+<td>前面1-5个存储的值，就是这个内容的长度</td>
+</tr>
+</tbody>
+</table>
+
+<p>       
+       
+       </p>
+
+<h4 id="rdb-value-存储">RDB Value 存储</h4>
+
+<table>
+<thead>
+<tr>
+<th>标题</th>
+<th>长度</th>
+<th>案例</th>
+<th>备注</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td>REDIS_STRING</td>
+<td>N</td>
+<td>MyTestVale</td>
+<td>参考 RDB String 存储</td>
+</tr>
+
+<tr>
+<td>REDIS_LIST    </td>
+<td></td>
+<td></td>
+<td>参考 DB value 存储 - REDIS_LIST </td>
+</tr>
+
+<tr>
+<td>REDIS_SET</td>
+<td></td>
+<td></td>
+<td>     </td>
+</tr>
+
+<tr>
+<td>REDIS_ZSET</td>
+<td></td>
+<td></td>
+<td>           </td>
+</tr>
+
+<tr>
+<td>REDIS_HASH</td>
+<td></td>
+<td></td>
+<td>           </td>
+</tr>
+</tbody>
+</table>
+
+<h5 id="rdb-value-存储-redis-list">RDB value 存储 - REDIS_LIST</h5>
+
+<table>
+<thead>
+<tr>
+<th>标题</th>
+<th>长度</th>
+<th>案例</th>
+<th>备注</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td>REDIS_ENCODING_ZIPLIST</td>
+<td>N</td>
+<td></td>
+<td>字符串长度</td>
+</tr>
+
+<tr>
+<td>REDIS_ENCODING_LINKEDLIST</td>
+<td></td>
+<td>参考 RDB value 存储 - REDIS_LIST - REDIS_ENCODING_LINKEDLIST </td>
+<td></td>
+</tr>
+</tbody>
+</table>
+
+<p>       
+       
+       </p>
+
+<h5 id="rdb-value-存储-redis-list-redis-encoding-linkedlist">RDB value 存储 - REDIS_LIST - REDIS_ENCODING_LINKEDLIST</h5>
+
+<table>
+<thead>
+<tr>
+<th>标题</th>
+<th>长度</th>
+<th>案例</th>
+<th>备注</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td>List的个数</td>
+<td>1-5  </td>
+<td></td>
+<td>这里存的是 list 的个数，不是整个list 占的字节数参考 Redis RDB数据不定长数据存储协议</td>
+</tr>
+
+<tr>
+<td>List数据内容</td>
+<td>N  </td>
+<td></td>
+<td>遍历list的值，存储，每个值一条记录参考 RDB String 存储</td>
+</tr>
+</tbody>
+</table>
+
+<p>       </p>
+
+<h5 id="rdb-value-存储-redis-set">RDB value 存储 - REDIS_SET</h5>
+
+<table>
+<thead>
+<tr>
+<th>标题</th>
+<th>长度</th>
+<th>案例</th>
+<th>备注</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td>REDIS_ENCODING_HT</td>
+<td>N  </td>
+<td></td>
+<td>字符串长度</td>
+</tr>
+
+<tr>
+<td>REDIS_ENCODING_INTSET</td>
+<td>N</td>
+<td>参考 RDB String 存储 </td>
+<td></td>
+</tr>
+</tbody>
+</table>
+
+<p>       
+       
+       </p>
+
+<h6 id="rdb-value-存储-redis-set-redis-encoding-ht">RDB value 存储 - REDIS_SET - REDIS_ENCODING_HT</h6>
+
+<table>
+<thead>
+<tr>
+<th>标题</th>
+<th>长度</th>
+<th>案例</th>
+<th>备注</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td>字典的大小</td>
+<td>N  </td>
+<td></td>
+<td>这里存的是 map里的个数，不是整个map占的字节数参考 Redis RDB数据不定长数据存储协议</td>
+</tr>
+
+<tr>
+<td>字典的key</td>
+<td>N</td>
+<td> </td>
+<td>遍历map的key，存储，每个值一条记录参考 RDB String 存储</td>
+</tr>
+</tbody>
+</table>
+
+<p>       </p>
+
+<h5 id="rdb-value-存储-redis-zset">RDB value 存储 - REDIS_ZSET</h5>
+
+<table>
+<thead>
+<tr>
+<th>标题</th>
+<th>长度</th>
+<th>案例</th>
+<th>备注</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td>REDIS_ENCODING_ZIPLIST</td>
+<td>N</td>
+<td> </td>
+<td>参考 RDB String 存储</td>
+</tr>
+
+<tr>
+<td>REDIS_ENCODING_SKIPLIST</td>
+<td>N </td>
+<td></td>
+<td>参考RDB value 存储 - REDIS_ZSET- REDIS_ENCODING_SKIPLIST </td>
+</tr>
+</tbody>
+</table>
+
+<p>######RDB value 存储 - REDIS_ZSET- REDIS_ENCODING_SKIPLIST</p>
+
+<table>
+<thead>
+<tr>
+<th>标题</th>
+<th>长度</th>
+<th>案例</th>
+<th>备注</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td>字典的大小</td>
+<td>N</td>
+<td> </td>
+<td>这里存的是 map里的个数，不是整个map占的字节数参考 Redis RDB数据不定长数据存储协议</td>
+</tr>
+
+<tr>
+<td>字典的内容  </td>
+<td></td>
+<td></td>
+<td>这个字典存的都是double值</td>
+</tr>
+</tbody>
+</table>
+
+<table>
+<thead>
+<tr>
+<th>标题</th>
+<th>长度</th>
+<th>案例</th>
+<th>备注</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td>字典key</td>
+<td>N  </td>
+<td></td>
+<td>参考 RDB String 存储</td>
+</tr>
+
+<tr>
+<td>字典val</td>
+<td>128  </td>
+<td></td>
+<td>Doule值</td>
+</tr>
+</tbody>
+</table>
+
+<h5 id="rdb-value-存储-redis-hash">RDB value 存储 - REDIS_HASH</h5>
+
+<table>
+<thead>
+<tr>
+<th>标题</th>
+<th>长度</th>
+<th>案例</th>
+<th>备注</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td>REDIS_ENCODING_ZIPLIST</td>
+<td>N</td>
+<td></td>
+<td> 参考 RDB String 存储</td>
+</tr>
+
+<tr>
+<td>REDIS_ENCODING_HT </td>
+<td></td>
+<td></td>
+<td>参考RDB value 存储 - REDIS_HASH- REDIS_ENCODING_HT </td>
+</tr>
+</tbody>
+</table>
+
+<h5 id="rdb-value-存储-redis-hash-redis-encoding-ht">RDB value 存储 - REDIS_HASH- REDIS_ENCODING_HT</h5>
+
+<table>
+<thead>
+<tr>
+<th>标题</th>
+<th>长度</th>
+<th>案例</th>
+<th>备注</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td>字典的大小</td>
+<td>N  </td>
+<td></td>
+<td>这里存的是 map里的个数，不是整个map占的字节数参考 Redis RDB数据不定长数据存储协议</td>
+</tr>
+
+<tr>
+<td>字典的内容</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+
+<p>    </p>
+
+<table>
+<thead>
+<tr>
+<th>标题</th>
+<th>长度</th>
+<th>案例</th>
+<th>备注</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td>字典key</td>
+<td>N  </td>
+<td></td>
+<td>参考 RDB String 存储</td>
+</tr>
+
+<tr>
+<td>字典val</td>
+<td>N  </td>
+<td></td>
+<td>参考 RDB String 存储</td>
+</tr>
+</tbody>
+</table>
+
+    </div>
+
+    <div class="post-copyright">
+  <p class="copyright-item">
+    <span class="item-title">文章作者</span>
+    <span class="item-content">jc3wish</span>
+  </p>
+  <p class="copyright-item">
+    <span class="item-title">上次更新</span>
+    <span class="item-content">
+        2019-12-02
+        
+    </span>
+  </p>
+  
+  
+</div>
+<footer class="post-footer">
+      <div class="post-tags">
+          <a href="/tags/redis/">Redis</a>
+          </div>
+      <nav class="post-nav">
+        
+        <a class="next" href="/post/redis/initserver_about/">
+            <span class="next-text nav-default">Redis启动概述</span>
+            <span class="next-text nav-mobile">下一篇</span>
+            <i class="iconfont icon-right"></i>
+          </a>
+      </nav>
+    </footer>
+  </article>
+        </div>
+        <div id="comments-gitment"></div>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/theme-next/theme-next-gitment@1/default.min.css" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/gh/theme-next/theme-next-gitment@1/gitment.browser.min.js" crossorigin="anonymous"></script>
+    <script type="text/javascript">
+      var gitment = new Gitment({
+        id: '2019-12-02 23:38:26 \x2b0800 CST',
+        title: 'Redis RDB 存储协议',
+        link: decodeURI(location.href),
+        desc: '内容 字节数 案例 备注 RDB版本号 9 REDIS0006 数据库类型 1 254 254 代表后面跟着的存储是数据第几个数据库，比如，0,1-16 第几个数据库 1-5 0 参数Redis RD',
+        owner: 'jc3wish',
+        repo: 'jc3wish.github.io.comment',
+        oauth: {
+          client_id: 'f3281f42aa53efc269d3',
+          client_secret: 'd01f916754cbbe5e9e856941a7e8161d547d135d'
+        }
+      });
+      gitment.render('comments-gitment');
+    </script>
+    <noscript>Please enable JavaScript to view the <a href="https://github.com/imsun/gitment">comments powered by gitment.</a></noscript>
+
+  
+
+  
+
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="social-links">
+      <a href="mailto:jc3wish@126.com" class="iconfont icon-email" title="email"></a>
+      <a href="https://github.com/jc3wish" class="iconfont icon-github" title="github"></a>
+  <a href="https://jc3wish.github.io/index.xml" type="application/rss+xml" class="iconfont icon-rss" title="rss"></a>
+</div>
+
+<div class="copyright">
+  <span class="power-by">
+    由 <a class="hexo-link" href="https://gohugo.io">Hugo</a> 强力驱动
+  </span>
+  <span class="division">|</span>
+  <span class="theme-info">
+    主题 - 
+    <a class="theme-link" href="https://github.com/olOwOlo/hugo-theme-even">Even</a>
+  </span>
+
+  
+
+  <span class="copyright-year">
+    &copy; 
+    2019
+    <span class="heart">
+      <i class="iconfont icon-heart"></i>
+    </span>
+    <span class="author">jc3wish</span>
+  </span>
+</div>
+    </footer>
+
+    <div class="back-to-top" id="back-to-top">
+      <i class="iconfont icon-up"></i>
+    </div>
+  </div>
+  
+  <script src="https://cdn.jsdelivr.net/npm/jquery@3.2.1/dist/jquery.min.js" integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4=" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/slideout@1.0.1/dist/slideout.min.js" integrity="sha256-t+zJ/g8/KXIJMjSVQdnibt4dlaDxc9zXr/9oNPeWqdg=" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@3.1.20/dist/jquery.fancybox.min.js" integrity="sha256-XVLffZaxoWfGUEbdzuLi7pwaUJv1cecsQJQqGLe7axY=" crossorigin="anonymous"></script>
+<script type="text/javascript" src="/dist/even.26188efa.min.js"></script>
+
+
+
+
+
+
+
+
+</body>
+</html>
