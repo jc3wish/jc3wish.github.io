@@ -12,12 +12,30 @@
     
     
     <item>
+      <title>Redis AOF 持久化 实现原理</title>
+      <link>https://jc3wish.github.io/post/redis/redis_aof/</link>
+      <pubDate>Mon, 02 Dec 2019 23:38:26 +0800</pubDate>
+      
+      <guid>https://jc3wish.github.io/post/redis/redis_aof/</guid>
+      <description>1. AOF 概念 From now on, every time Redis receives a command that changes the dataset (e.g. SET) it will append it to the AOF. When you restart Redis it will re-play the AOF to rebuild the state. 写入的命令以追加到文件的形式保存到文件中 重启的时候对命令进行重</description>
+    </item>
+    
+    <item>
       <title>Redis RDB 存储协议</title>
       <link>https://jc3wish.github.io/post/redis/redis_rdb_storage/</link>
       <pubDate>Mon, 02 Dec 2019 23:38:26 +0800</pubDate>
       
       <guid>https://jc3wish.github.io/post/redis/redis_rdb_storage/</guid>
       <description>内容 字节数 案例 备注 RDB版本号 9 REDIS0006 数据库类型 1 254 254 代表后面跟着的存储是数据第几个数据库，比如，0,1-16 第几个数据库 1-5 0 参数Redis RD</description>
+    </item>
+    
+    <item>
+      <title>Redis RDB 持久化 实现原理</title>
+      <link>https://jc3wish.github.io/post/redis/redis_rdb/</link>
+      <pubDate>Mon, 02 Dec 2019 23:38:26 +0800</pubDate>
+      
+      <guid>https://jc3wish.github.io/post/redis/redis_rdb/</guid>
+      <description>1. RDB 概念 官方解析 By default Redis saves snapshots of the dataset on disk, in a binary file called dump.rdb. You can configure Redis to have it save the dataset every N seconds if there are at least M changes in the dataset, or you can manually call the SAVE or BGSAVE commands. 本人解析 将内存中数据，以镜</description>
     </item>
     
     <item>

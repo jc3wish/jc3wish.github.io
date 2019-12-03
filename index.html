@@ -114,6 +114,27 @@
           <section id="posts" class="posts">
     <article class="post">
   <header class="post-header">
+    <h1 class="post-title"><a class="post-link" href="/post/redis/redis_aof/">Redis AOF 持久化 实现原理</a></h1>
+    <div class="post-meta">
+      <span class="post-time"> 2019-12-02 </span>
+      <div class="post-category">
+          <a href="/categories/redis/"> Redis </a>
+          </div>
+    </div>
+  </header>
+  
+  <div class="post-content">
+    <div class="post-summary">
+      1. AOF 概念 From now on, every time Redis receives a command that changes the dataset (e.g. SET) it will append it to the AOF. When you restart Redis it will re-play the AOF to rebuild the state. 写入的命令以追加到文件的形式保存到文件中 重启的时候对命令进行重
+    </div>
+    <div class="read-more">
+      <a href="/post/redis/redis_aof/" class="read-more-link">阅读更多</a>
+    </div>
+  </div>
+</article>
+
+    <article class="post">
+  <header class="post-header">
     <h1 class="post-title"><a class="post-link" href="/post/redis/redis_rdb_storage/">Redis RDB 存储协议</a></h1>
     <div class="post-meta">
       <span class="post-time"> 2019-12-02 </span>
@@ -129,6 +150,27 @@
     </div>
     <div class="read-more">
       <a href="/post/redis/redis_rdb_storage/" class="read-more-link">阅读更多</a>
+    </div>
+  </div>
+</article>
+
+    <article class="post">
+  <header class="post-header">
+    <h1 class="post-title"><a class="post-link" href="/post/redis/redis_rdb/">Redis RDB 持久化 实现原理</a></h1>
+    <div class="post-meta">
+      <span class="post-time"> 2019-12-02 </span>
+      <div class="post-category">
+          <a href="/categories/redis/"> Redis </a>
+          </div>
+    </div>
+  </header>
+  
+  <div class="post-content">
+    <div class="post-summary">
+      1. RDB 概念 官方解析 By default Redis saves snapshots of the dataset on disk, in a binary file called dump.rdb. You can configure Redis to have it save the dataset every N seconds if there are at least M changes in the dataset, or you can manually call the SAVE or BGSAVE commands. 本人解析 将内存中数据，以镜
+    </div>
+    <div class="read-more">
+      <a href="/post/redis/redis_rdb/" class="read-more-link">阅读更多</a>
     </div>
   </div>
 </article>
@@ -175,53 +217,14 @@
   </div>
 </article>
 
-    <article class="post">
-  <header class="post-header">
-    <h1 class="post-title"><a class="post-link" href="/post/bifrost_dev_20191020/">Bifrost 开发进度 20191020</a></h1>
-    <div class="post-meta">
-      <span class="post-time"> 2019-10-20 </span>
-      <div class="post-category">
-          <a href="/categories/bifrost/"> Bifrost </a>
-          </div>
-    </div>
-  </header>
-  
-  <div class="post-content">
-    <div class="post-summary">
-      这个周末,总的时间加起来差不多有1天的时间在 对 Bifrost 进行开发 发行了一个 Bifrost_v1.1.0-beta.19 版本,这个版本可能会是一个比较阶段性比较重要的版本 主要功能如: 位点延时计
-    </div>
-    <div class="read-more">
-      <a href="/post/bifrost_dev_20191020/" class="read-more-link">阅读更多</a>
-    </div>
-  </div>
-</article>
-
-    <article class="post">
-  <header class="post-header">
-    <h1 class="post-title"><a class="post-link" href="/post/my-first-blog/">第一篇博客</a></h1>
-    <div class="post-meta">
-      <span class="post-time"> 2019-10-16 </span>
-      <div class="post-category">
-          <a href="/categories/%E6%9D%82%E8%B0%88/"> 杂谈 </a>
-          </div>
-    </div>
-  </header>
-  
-  <div class="post-content">
-    <div class="post-summary">
-      折腾了 hexo 不少时间,一直没真正用起来, 重点是那 nodejs ,npm 还有各种 依懒包的可能不兼容,太折腾人了 最终换成了 hugo 我也是一个委喜欢 golang 的人,还是支持下 hugo 吧 hugo 直
-    </div>
-    <div class="read-more">
-      <a href="/post/my-first-blog/" class="read-more-link">阅读更多</a>
-    </div>
-  </div>
-</article>
-
     </section>
   
   <nav class="pagination">
     
-    
+    <a class="next" href="/page/2/">
+        <span class="next-text">下一页</span>
+        <i class="iconfont icon-right"></i>
+      </a>
   </nav>
         </div>
         

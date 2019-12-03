@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <title>Redis RDB 持久化 实现原理 - jc3wish blog</title>
+  <meta name="renderer" content="webkit" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+<meta name="theme-color" content="#f8f5ec" />
+<meta name="msapplication-navbutton-color" content="#f8f5ec">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="#f8f5ec">
+
+
+<meta name="author" content="jc3wish" /><meta name="description" content="1. RDB 概念 官方解析 By default Redis saves snapshots of the dataset on disk, in a binary file called dump.rdb. You can configure Redis to have it save the dataset every N seconds if there are at least M changes in the dataset, or you can manually call the SAVE or BGSAVE commands. 本人解析 将内存中数据，以镜" /><meta name="keywords" content="Bifrost, Jc3wish" />
+
+
+
+
+
+
+<meta name="generator" content="Hugo 0.59.1 with theme even" />
+
+
+<link rel="canonical" href="https://jc3wish.github.io/post/redis/redis_rdb/" />
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+<link rel="manifest" href="/manifest.json">
+<link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5">
+
+
+<link href="/dist/even.c2a46f00.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@3.1.20/dist/jquery.fancybox.min.css" integrity="sha256-7TyXnr2YU040zfSP+rEcz29ggW4j56/ujTPwjMzyqFY=" crossorigin="anonymous">
+
+
+<meta property="og:title" content="Redis RDB 持久化 实现原理" />
+<meta property="og:description" content="1. RDB 概念 官方解析 By default Redis saves snapshots of the dataset on disk, in a binary file called dump.rdb. You can configure Redis to have it save the dataset every N seconds if there are at least M changes in the dataset, or you can manually call the SAVE or BGSAVE commands. 本人解析 将内存中数据，以镜" />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://jc3wish.github.io/post/redis/redis_rdb/" />
+<meta property="article:published_time" content="2019-12-02T23:38:26+08:00" />
+<meta property="article:modified_time" content="2019-12-02T23:38:26+08:00" />
+<meta itemprop="name" content="Redis RDB 持久化 实现原理">
+<meta itemprop="description" content="1. RDB 概念 官方解析 By default Redis saves snapshots of the dataset on disk, in a binary file called dump.rdb. You can configure Redis to have it save the dataset every N seconds if there are at least M changes in the dataset, or you can manually call the SAVE or BGSAVE commands. 本人解析 将内存中数据，以镜">
+
+
+<meta itemprop="datePublished" content="2019-12-02T23:38:26&#43;08:00" />
+<meta itemprop="dateModified" content="2019-12-02T23:38:26&#43;08:00" />
+<meta itemprop="wordCount" content="1185">
+
+
+
+<meta itemprop="keywords" content="Redis," />
+<meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="Redis RDB 持久化 实现原理"/>
+<meta name="twitter:description" content="1. RDB 概念 官方解析 By default Redis saves snapshots of the dataset on disk, in a binary file called dump.rdb. You can configure Redis to have it save the dataset every N seconds if there are at least M changes in the dataset, or you can manually call the SAVE or BGSAVE commands. 本人解析 将内存中数据，以镜"/>
+
+<!--[if lte IE 9]>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/classlist/1.1.20170427/classList.min.js"></script>
+<![endif]-->
+
+<!--[if lt IE 9]>
+  <script src="https://cdn.jsdelivr.net/npm/html5shiv@3.7.3/dist/html5shiv.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/respond.js@1.4.2/dest/respond.min.js"></script>
+<![endif]-->
+
+</head>
+<body>
+  <div id="mobile-navbar" class="mobile-navbar">
+  <div class="mobile-header-logo">
+    <a href="/" class="logo">Jc3wish</a>
+  </div>
+  <div class="mobile-navbar-icon">
+    <span></span>
+    <span></span>
+    <span></span>
+  </div>
+</div>
+<nav id="mobile-menu" class="mobile-menu slideout-menu">
+  <ul class="mobile-menu-list">
+    <a href="/">
+        <li class="mobile-menu-item">主页</li>
+      </a><a href="/post/">
+        <li class="mobile-menu-item">归档</li>
+      </a><a href="/tags/">
+        <li class="mobile-menu-item">标签</li>
+      </a><a href="/categories/">
+        <li class="mobile-menu-item">分类</li>
+      </a>
+  </ul>
+</nav>
+  <div class="container" id="mobile-panel">
+    <header id="header" class="header">
+        <div class="logo-wrapper">
+  <a href="/" class="logo">Jc3wish</a>
+</div>
+
+<nav class="site-navbar">
+  <ul id="menu" class="menu">
+    <li class="menu-item">
+        <a class="menu-item-link" href="/">主页</a>
+      </li><li class="menu-item">
+        <a class="menu-item-link" href="/post/">归档</a>
+      </li><li class="menu-item">
+        <a class="menu-item-link" href="/tags/">标签</a>
+      </li><li class="menu-item">
+        <a class="menu-item-link" href="/categories/">分类</a>
+      </li>
+  </ul>
+</nav>
+    </header>
+
+    <main id="main" class="main">
+      <div class="content-wrapper">
+        <div id="content" class="content">
+          <article class="post">
+    
+    <header class="post-header">
+      <h1 class="post-title">Redis RDB 持久化 实现原理</h1>
+
+      <div class="post-meta">
+        <span class="post-time"> 2019-12-02 </span>
+        <div class="post-category">
+            <a href="/categories/redis/"> Redis </a>
+            </div>
+        
+      </div>
+    </header>
+
+    <div class="post-toc" id="post-toc">
+  <h2 class="post-toc-title">文章目录</h2>
+  <div class="post-toc-content always-active">
+    <nav id="TableOfContents">
+<ul>
+<li>
+<ul>
+<li>
+<ul>
+<li><a href="#1-rdb-概念">1. RDB 概念</a></li>
+<li><a href="#2-rdb-配置">2. RDB 配置</a></li>
+<li><a href="#3-定时检查是否刷开子进程刷盘">3. 定时检查是否刷开子进程刷盘</a>
+<ul>
+<li><a href="#1-每次写命令执行的时候-变量-server-dirty">1). 每次写命令执行的时候 变量 server.dirty ++</a></li>
+<li><a href="#2-默认情况下每100ms-触发一次定时器-检查是否满足配置条件">2). 默认情况下每100ms 触发一次定时器，检查是否满足配置条件</a></li>
+<li><a href="#3-开启一个子进程将数据镜像刷到磁盘">3). 开启一个子进程将数据镜像刷到磁盘</a></li>
+</ul></li>
+<li><a href="#4-rdb-刷盘过程">4. RDB 刷盘过程</a>
+<ul>
+<li><a href="#1-创建一个-tmp-pid-rdb-的临时文件">1). 创建一个 tmp-$pid.rdb 的临时文件</a></li>
+<li><a href="#2-按-rdb-存储协议-追加数据到-tmp-pid-rdb-文件中">2). 按 RDB 存储协议 追加数据到  tmp-$pid.rdb 文件中</a></li>
+<li><a href="#3-当所有数据追加到-tmp-pid-rdb-完之后-对句柄进行close">3). 当所有数据追加到  tmp-$pid.rdb 完之后，对句柄进行close</a></li>
+<li><a href="#4-将-tmp-pid-rdb-文件重命名为-dump-rdb">4). 将 tmp-$pid.rdb 文件重命名为 dump.rdb</a></li>
+</ul></li>
+<li><a href="#5-rdb-刷盘失败">5. RDB 刷盘失败</a></li>
+<li><a href="#6-stop-writes-on-bgsave-error">6. stop-writes-on-bgsave-error</a></li>
+<li><a href="#7-手动触发-rdb-镜像生成">7. 手动触发 RDB 镜像生成</a>
+<ul>
+<li><a href="#7-1-save-命令">7.1 SAVE 命令</a></li>
+<li><a href="#7-2-bigsave-命令">7.2 BIGSAVE 命令</a></li>
+</ul></li>
+</ul></li>
+</ul></li>
+</ul>
+</nav>
+  </div>
+</div>
+    <div class="post-content">
+      
+
+<h3 id="1-rdb-概念">1. RDB 概念</h3>
+
+<p><strong>官方解析</strong></p>
+
+<p>By default Redis saves snapshots of the dataset on disk, in a binary file called dump.rdb.
+You can configure Redis to have it save the dataset every N seconds
+if there are at least M changes in the dataset,
+or you can manually call the SAVE or BGSAVE commands.</p>
+
+<p><strong>本人解析</strong></p>
+
+<p>将内存中数据，以镜像的方式存储到 dump.rdb 二进制文件中</p>
+
+<p>通过配置 N 秒刷了多少条数据进行触发</p>
+
+<p>也可以通过 SAVE 或者 BGSAVE 命令进行触发</p>
+
+<h3 id="2-rdb-配置">2. RDB 配置</h3>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span></pre></td>
+<td class="lntd">
+<pre class="chroma">save 900 1      #900 秒内如果至少有 1 个 key 的值变化，则保存
+save 300 10     #300 秒内如果至少有 10 个 key 的值变化，则保存
+save 60 10000  #60 秒内如果至少有 10000 个 key 的值变化，则保存
+
+stop-writes-on-bgsave-error yes  
+#当启用了RDB且最后一次后台保存数据失败，Redis是否停止接收数据
+
+rdbcompression yes  #是否进行压缩存储
+rdbchecksum yes  #使用CRC64算法来进行数据校验
+dbfilename dump.rdb #快照的文件名
+
+dir ./  #快照文件的存放路径</pre></td></tr></table>
+</div>
+</div>
+<h3 id="3-定时检查是否刷开子进程刷盘">3. 定时检查是否刷开子进程刷盘</h3>
+
+<p><img src="/images/redis/rdb_1.png" alt="image" /></p>
+
+<h4 id="1-每次写命令执行的时候-变量-server-dirty">1). 每次写命令执行的时候 变量 server.dirty ++</h4>
+
+<h4 id="2-默认情况下每100ms-触发一次定时器-检查是否满足配置条件">2). 默认情况下每100ms 触发一次定时器，检查是否满足配置条件</h4>
+
+<p>save 900 1<br />
+#900 秒内如果至少有 1 个 key 的值变化，则保存
+save 300 10<br />
+#300 秒内如果至少有 10 个 key 的值变化，则保存
+save 60 10000<br />
+#60 秒内如果至少有 10000 个 key 的值变化，则保存</p>
+
+<h4 id="3-开启一个子进程将数据镜像刷到磁盘">3). 开启一个子进程将数据镜像刷到磁盘</h4>
+
+<p>开启的子进程是采用 copy on write 的技术， 在有写命令的时候，才会复制2份</p>
+
+<h3 id="4-rdb-刷盘过程">4. RDB 刷盘过程</h3>
+
+<p><img src="/images/redis/rdb_2.png" alt="image" /></p>
+
+<h4 id="1-创建一个-tmp-pid-rdb-的临时文件">1). 创建一个 tmp-$pid.rdb 的临时文件</h4>
+
+<h4 id="2-按-rdb-存储协议-追加数据到-tmp-pid-rdb-文件中">2). 按 RDB 存储协议 追加数据到  tmp-$pid.rdb 文件中</h4>
+
+<p>RDB 文件 最开头 5 个字节 是存储的是 REDIS 5个字母</p>
+
+<p>再接下来的5个字节是RDB版本号，例如：0006</p>
+
+<p>接着就按 Redis 数据库顺序根据不同 存储的类型刷数据了</p>
+
+<p>不过什么类型，过期时间在前面，然后是就是数据类型，再接着就是key值，和 val值</p>
+
+<p>当所有 db 都遍历完之后，接着写一下 255 这个数字，占1个字节</p>
+
+<p>最后刷一个 cksum 值</p>
+
+<h4 id="3-当所有数据追加到-tmp-pid-rdb-完之后-对句柄进行close">3). 当所有数据追加到  tmp-$pid.rdb 完之后，对句柄进行close</h4>
+
+<h4 id="4-将-tmp-pid-rdb-文件重命名为-dump-rdb">4). 将 tmp-$pid.rdb 文件重命名为 dump.rdb</h4>
+
+<p>这里为什么要先写一个 tmp临时文件，写完之后再修改 dump.rdb 文件呢？</p>
+
+<p>假如直接写 dump.rdb文件，假如中途写失败了呢？那文件不就损坏了么？！</p>
+
+<h3 id="5-rdb-刷盘失败">5. RDB 刷盘失败</h3>
+
+<p>什么时候会刷盘失败？</p>
+
+<p>A. 当上一次rdb刷盘还没有完成的时候，不会再开新的子进程刷盘
+B. 开启子进程失败，子进程被kill 或者运行过程 异常退出</p>
+
+<p>不管什么原因造成子进程退出 ，在子进程结束回调的时候都会修改server.lastbgsave_status=REDIS_ERR</p>
+
+<h3 id="6-stop-writes-on-bgsave-error">6. stop-writes-on-bgsave-error</h3>
+
+<p>在 开启了  stop-writes-on-bgsave-error yes</p>
+
+<p>并且 上一次 RDB 刷盘之无，刷盘失败了，则会阻塞 写和PING 等命令</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span></pre></td>
+<td class="lntd">
+<pre class="chroma">/* Don&#39;t accept write commands if there are problems persisting on disk
+     * and if this is a master instance. */
+    if (((server.stop_writes_on_bgsave_err &amp;&amp;
+          server.saveparamslen &gt; 0 &amp;&amp;
+          server.lastbgsave_status == REDIS_ERR) ||
+          server.aof_last_write_status == REDIS_ERR) &amp;&amp;
+        server.masterhost == NULL &amp;&amp;
+        (c-&gt;cmd-&gt;flags &amp; REDIS_CMD_WRITE ||
+         c-&gt;cmd-&gt;proc == pingCommand))
+    {
+        flagTransaction(c);
+        if (server.aof_last_write_status == REDIS_OK)
+            addReply(c, shared.bgsaveerr);
+        else
+            addReplySds(c,
+                sdscatprintf(sdsempty(),
+                &#34;-MISCONF Errors writing to the AOF file: %s\r\n&#34;,
+                strerror(server.aof_last_write_errno)));
+        return REDIS_OK;
+    }</pre></td></tr></table>
+</div>
+</div>
+<h3 id="7-手动触发-rdb-镜像生成">7. 手动触发 RDB 镜像生成</h3>
+
+<h4 id="7-1-save-命令">7.1 SAVE 命令</h4>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span></pre></td>
+<td class="lntd">
+<pre class="chroma">void saveCommand(redisClient *c) {
+    if (server.rdb_child_pid != -1) {
+        addReplyError(c,&#34;Background save already in progress&#34;);
+        return;
+    }
+    if (rdbSave(server.rdb_filename) == REDIS_OK) {
+        addReply(c,shared.ok);
+    } else {
+        addReply(c,shared.err);
+    }
+}</pre></td></tr></table>
+</div>
+</div>
+<p>SAVE 命令，是阻塞式的</p>
+
+<p>是由当前主线程进行刷盘，而不是开子进程刷盘</p>
+
+<p>刷完之后再返回给客户端</p>
+
+<h4 id="7-2-bigsave-命令">7.2 BIGSAVE 命令</h4>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span></pre></td>
+<td class="lntd">
+<pre class="chroma">void bgsaveCommand(redisClient *c) {
+    if (server.rdb_child_pid != -1) {
+        addReplyError(c,&#34;Background save already in progress&#34;);
+    } else if (server.aof_child_pid != -1) {
+        addReplyError(c,&#34;Can&#39;t BGSAVE while AOF log rewriting is in progress&#34;);
+    } else if (rdbSaveBackground(server.rdb_filename) == REDIS_OK) {
+        addReplyStatus(c,&#34;Background saving started&#34;);
+    } else {
+        addReply(c,shared.err);
+    }
+}</pre></td></tr></table>
+</div>
+</div>
+<p>BIGSAVE 命令，是立马开启一下子进程，后台进行刷盘</p>
+
+<p>立马返回信息给你客户端</p>
+
+    </div>
+
+    <div class="post-copyright">
+  <p class="copyright-item">
+    <span class="item-title">文章作者</span>
+    <span class="item-content">jc3wish</span>
+  </p>
+  <p class="copyright-item">
+    <span class="item-title">上次更新</span>
+    <span class="item-content">
+        2019-12-02
+        
+    </span>
+  </p>
+  
+  
+</div>
+<footer class="post-footer">
+      <div class="post-tags">
+          <a href="/tags/redis/">Redis</a>
+          </div>
+      <nav class="post-nav">
+        <a class="prev" href="/post/redis/redis_rdb_storage/">
+            <i class="iconfont icon-left"></i>
+            <span class="prev-text nav-default">Redis RDB 存储协议</span>
+            <span class="prev-text nav-mobile">上一篇</span>
+          </a>
+        <a class="next" href="/post/redis/initserver_about/">
+            <span class="next-text nav-default">Redis启动概述</span>
+            <span class="next-text nav-mobile">下一篇</span>
+            <i class="iconfont icon-right"></i>
+          </a>
+      </nav>
+    </footer>
+  </article>
+        </div>
+        <div id="comments-gitment"></div>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/theme-next/theme-next-gitment@1/default.min.css" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/gh/theme-next/theme-next-gitment@1/gitment.browser.min.js" crossorigin="anonymous"></script>
+    <script type="text/javascript">
+      var gitment = new Gitment({
+        id: '2019-12-02 23:38:26 \x2b0800 CST',
+        title: 'Redis RDB 持久化 实现原理',
+        link: decodeURI(location.href),
+        desc: '1. RDB 概念 官方解析 By default Redis saves snapshots of the dataset on disk, in a binary file called dump.rdb. You can configure Redis to have it save the dataset every N seconds if there are at least M changes in the dataset, or you can manually call the SAVE or BGSAVE commands. 本人解析 将内存中数据，以镜',
+        owner: 'jc3wish',
+        repo: 'jc3wish.github.io.comment',
+        oauth: {
+          client_id: 'f3281f42aa53efc269d3',
+          client_secret: 'd01f916754cbbe5e9e856941a7e8161d547d135d'
+        }
+      });
+      gitment.render('comments-gitment');
+    </script>
+    <noscript>Please enable JavaScript to view the <a href="https://github.com/imsun/gitment">comments powered by gitment.</a></noscript>
+
+  
+
+  
+
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="social-links">
+      <a href="mailto:jc3wish@126.com" class="iconfont icon-email" title="email"></a>
+      <a href="https://github.com/jc3wish" class="iconfont icon-github" title="github"></a>
+  <a href="https://jc3wish.github.io/index.xml" type="application/rss+xml" class="iconfont icon-rss" title="rss"></a>
+</div>
+
+<div class="copyright">
+  <span class="power-by">
+    由 <a class="hexo-link" href="https://gohugo.io">Hugo</a> 强力驱动
+  </span>
+  <span class="division">|</span>
+  <span class="theme-info">
+    主题 - 
+    <a class="theme-link" href="https://github.com/olOwOlo/hugo-theme-even">Even</a>
+  </span>
+
+  
+
+  <span class="copyright-year">
+    &copy; 
+    2019
+    <span class="heart">
+      <i class="iconfont icon-heart"></i>
+    </span>
+    <span class="author">jc3wish</span>
+  </span>
+</div>
+    </footer>
+
+    <div class="back-to-top" id="back-to-top">
+      <i class="iconfont icon-up"></i>
+    </div>
+  </div>
+  
+  <script src="https://cdn.jsdelivr.net/npm/jquery@3.2.1/dist/jquery.min.js" integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4=" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/slideout@1.0.1/dist/slideout.min.js" integrity="sha256-t+zJ/g8/KXIJMjSVQdnibt4dlaDxc9zXr/9oNPeWqdg=" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@3.1.20/dist/jquery.fancybox.min.js" integrity="sha256-XVLffZaxoWfGUEbdzuLi7pwaUJv1cecsQJQqGLe7axY=" crossorigin="anonymous"></script>
+<script type="text/javascript" src="/dist/even.26188efa.min.js"></script>
+
+
+
+
+
+
+
+
+</body>
+</html>

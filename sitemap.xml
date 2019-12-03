@@ -23,13 +23,6 @@
   </url>
   
   <url>
-    <loc>https://jc3wish.github.io/categories/redis/</loc>
-    <lastmod>2019-12-02T23:38:26+08:00</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.5</priority>
-  </url>
-  
-  <url>
     <loc>https://jc3wish.github.io/tags/redis/</loc>
     <lastmod>2019-12-02T23:38:26+08:00</lastmod>
     <changefreq>weekly</changefreq>
@@ -37,7 +30,28 @@
   </url>
   
   <url>
+    <loc>https://jc3wish.github.io/categories/redis/</loc>
+    <lastmod>2019-12-02T23:38:26+08:00</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  
+  <url>
+    <loc>https://jc3wish.github.io/post/redis/redis_aof/</loc>
+    <lastmod>2019-12-02T23:38:26+08:00</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  
+  <url>
     <loc>https://jc3wish.github.io/post/redis/redis_rdb_storage/</loc>
+    <lastmod>2019-12-02T23:38:26+08:00</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  
+  <url>
+    <loc>https://jc3wish.github.io/post/redis/redis_rdb/</loc>
     <lastmod>2019-12-02T23:38:26+08:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.5</priority>
@@ -93,14 +107,14 @@
   </url>
   
   <url>
-    <loc>https://jc3wish.github.io/categories/%E6%9D%82%E8%B0%88/</loc>
+    <loc>https://jc3wish.github.io/tags/%E6%9D%82%E8%B0%88/</loc>
     <lastmod>2019-10-16T22:24:26+08:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.5</priority>
   </url>
   
   <url>
-    <loc>https://jc3wish.github.io/tags/%E6%9D%82%E8%B0%88/</loc>
+    <loc>https://jc3wish.github.io/categories/%E6%9D%82%E8%B0%88/</loc>
     <lastmod>2019-10-16T22:24:26+08:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.5</priority>

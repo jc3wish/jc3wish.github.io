@@ -1,0 +1,692 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <title>Redis AOF 持久化 实现原理 - jc3wish blog</title>
+  <meta name="renderer" content="webkit" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+<meta name="theme-color" content="#f8f5ec" />
+<meta name="msapplication-navbutton-color" content="#f8f5ec">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="#f8f5ec">
+
+
+<meta name="author" content="jc3wish" /><meta name="description" content="1. AOF 概念 From now on, every time Redis receives a command that changes the dataset (e.g. SET) it will append it to the AOF. When you restart Redis it will re-play the AOF to rebuild the state. 写入的命令以追加到文件的形式保存到文件中 重启的时候对命令进行重" /><meta name="keywords" content="Bifrost, Jc3wish" />
+
+
+
+
+
+
+<meta name="generator" content="Hugo 0.59.1 with theme even" />
+
+
+<link rel="canonical" href="https://jc3wish.github.io/post/redis/redis_aof/" />
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+<link rel="manifest" href="/manifest.json">
+<link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5">
+
+
+<link href="/dist/even.c2a46f00.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@3.1.20/dist/jquery.fancybox.min.css" integrity="sha256-7TyXnr2YU040zfSP+rEcz29ggW4j56/ujTPwjMzyqFY=" crossorigin="anonymous">
+
+
+<meta property="og:title" content="Redis AOF 持久化 实现原理" />
+<meta property="og:description" content="1. AOF 概念 From now on, every time Redis receives a command that changes the dataset (e.g. SET) it will append it to the AOF. When you restart Redis it will re-play the AOF to rebuild the state. 写入的命令以追加到文件的形式保存到文件中 重启的时候对命令进行重" />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://jc3wish.github.io/post/redis/redis_aof/" />
+<meta property="article:published_time" content="2019-12-02T23:38:26+08:00" />
+<meta property="article:modified_time" content="2019-12-02T23:38:26+08:00" />
+<meta itemprop="name" content="Redis AOF 持久化 实现原理">
+<meta itemprop="description" content="1. AOF 概念 From now on, every time Redis receives a command that changes the dataset (e.g. SET) it will append it to the AOF. When you restart Redis it will re-play the AOF to rebuild the state. 写入的命令以追加到文件的形式保存到文件中 重启的时候对命令进行重">
+
+
+<meta itemprop="datePublished" content="2019-12-02T23:38:26&#43;08:00" />
+<meta itemprop="dateModified" content="2019-12-02T23:38:26&#43;08:00" />
+<meta itemprop="wordCount" content="2287">
+
+
+
+<meta itemprop="keywords" content="Redis," />
+<meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="Redis AOF 持久化 实现原理"/>
+<meta name="twitter:description" content="1. AOF 概念 From now on, every time Redis receives a command that changes the dataset (e.g. SET) it will append it to the AOF. When you restart Redis it will re-play the AOF to rebuild the state. 写入的命令以追加到文件的形式保存到文件中 重启的时候对命令进行重"/>
+
+<!--[if lte IE 9]>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/classlist/1.1.20170427/classList.min.js"></script>
+<![endif]-->
+
+<!--[if lt IE 9]>
+  <script src="https://cdn.jsdelivr.net/npm/html5shiv@3.7.3/dist/html5shiv.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/respond.js@1.4.2/dest/respond.min.js"></script>
+<![endif]-->
+
+</head>
+<body>
+  <div id="mobile-navbar" class="mobile-navbar">
+  <div class="mobile-header-logo">
+    <a href="/" class="logo">Jc3wish</a>
+  </div>
+  <div class="mobile-navbar-icon">
+    <span></span>
+    <span></span>
+    <span></span>
+  </div>
+</div>
+<nav id="mobile-menu" class="mobile-menu slideout-menu">
+  <ul class="mobile-menu-list">
+    <a href="/">
+        <li class="mobile-menu-item">主页</li>
+      </a><a href="/post/">
+        <li class="mobile-menu-item">归档</li>
+      </a><a href="/tags/">
+        <li class="mobile-menu-item">标签</li>
+      </a><a href="/categories/">
+        <li class="mobile-menu-item">分类</li>
+      </a>
+  </ul>
+</nav>
+  <div class="container" id="mobile-panel">
+    <header id="header" class="header">
+        <div class="logo-wrapper">
+  <a href="/" class="logo">Jc3wish</a>
+</div>
+
+<nav class="site-navbar">
+  <ul id="menu" class="menu">
+    <li class="menu-item">
+        <a class="menu-item-link" href="/">主页</a>
+      </li><li class="menu-item">
+        <a class="menu-item-link" href="/post/">归档</a>
+      </li><li class="menu-item">
+        <a class="menu-item-link" href="/tags/">标签</a>
+      </li><li class="menu-item">
+        <a class="menu-item-link" href="/categories/">分类</a>
+      </li>
+  </ul>
+</nav>
+    </header>
+
+    <main id="main" class="main">
+      <div class="content-wrapper">
+        <div id="content" class="content">
+          <article class="post">
+    
+    <header class="post-header">
+      <h1 class="post-title">Redis AOF 持久化 实现原理</h1>
+
+      <div class="post-meta">
+        <span class="post-time"> 2019-12-02 </span>
+        <div class="post-category">
+            <a href="/categories/redis/"> Redis </a>
+            </div>
+        
+      </div>
+    </header>
+
+    <div class="post-toc" id="post-toc">
+  <h2 class="post-toc-title">文章目录</h2>
+  <div class="post-toc-content always-active">
+    <nav id="TableOfContents">
+<ul>
+<li>
+<ul>
+<li>
+<ul>
+<li><a href="#1-aof-概念">1. AOF 概念</a></li>
+<li><a href="#2-aof-配置">2. AOF 配置</a></li>
+<li><a href="#3-aof-在实现过程中重要成员">3. AOF 在实现过程中重要成员</a>
+<ul>
+<li><a href="#3-1-aof-状态">3.1 AOF 状态</a></li>
+<li><a href="#3-2-重要变量">3.2 重要变量</a></li>
+</ul></li>
+<li><a href="#4-aof-rewrite">4. AOF rewrite</a>
+<ul>
+<li><a href="#4-1-aof-rewrite-开启一个子进程">4.1 AOF rewrite 开启一个子进程</a></li>
+<li><a href="#4-2-aof-rewrite-刷盘过程">4.2 AOF rewrite 刷盘过程</a></li>
+<li><a href="#4-3-aof-rewrite-子进程结束之后回调">4.3 AOF rewrite 子进程结束之后回调</a></li>
+<li><a href="#4-4-aof-rewrite-触发">4.4 AOF rewrite 触发</a></li>
+</ul></li>
+<li><a href="#5-redis-写命令">5. Redis 写命令</a></li>
+<li><a href="#6-appendfsync-everysec">6. appendfsync everysec</a></li>
+<li><a href="#7-appendfsync-aways">7. appendfsync aways</a></li>
+<li><a href="#8-appendfsync-no">8. appendfsync  no</a></li>
+<li><a href="#9-小结">9. 小结</a></li>
+</ul></li>
+</ul></li>
+</ul>
+</nav>
+  </div>
+</div>
+    <div class="post-content">
+      
+
+<h3 id="1-aof-概念">1. AOF 概念</h3>
+
+<p>From now on, every time Redis receives a command that changes the dataset (e.g. SET)</p>
+
+<p>it will append it to the AOF.</p>
+
+<p>When you restart Redis it will re-play the AOF to rebuild the state.</p>
+
+<p>写入的命令以追加到文件的形式保存到文件中
+重启的时候对命令进行重现</p>
+
+<p>AOF 是解决 RDB 会丢失一部分数据则出来的持久久，每写一条命令，就往文件中追加一次</p>
+
+<p>但这样有可能会就会造成一个文件非常的大，并且在重启的时候，对命令重现的时候，非常的久</p>
+
+<p>所以 AOF 也有类似的镜像模式</p>
+
+<h3 id="2-aof-配置">2. AOF 配置</h3>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span></pre></td>
+<td class="lntd">
+<pre class="chroma">appendonly no      #是否开启AOF，默认no
+appendfilename &#34;appendonly.aof&#34;     #aof文件
+
+appendfsync   
+#always 每条命令都刷盘
+#everysec 每秒刷盘
+#no 内核决定什么时候刷
+
+no-appendfsync-on-rewrite no  #是否开启rdb类似方式rewrite镜像写
+auto-aof-rewrite-percentage 100   #AOF文件是上一次重写的时候的1倍大小
+auto-aof-rewrite-min-size 64mb    #并于AOF文件要大于64M
+
+aof-load-truncated yes  #当数据恢复的时候，假如遇到数据损坏，是继续还是直接退出
+
+aof-rewrite-incremental-fsync yes #当 aof rewrite 的时候开启32MB数据，刷一次盘</pre></td></tr></table>
+</div>
+</div>
+<h3 id="3-aof-在实现过程中重要成员">3. AOF 在实现过程中重要成员</h3>
+
+<h4 id="3-1-aof-状态">3.1 AOF 状态</h4>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span><span class="lnt">6
+</span><span class="lnt">7
+</span></pre></td>
+<td class="lntd">
+<pre class="chroma">/* AOF states */
+
+#define REDIS_AOF_OFF 0             /* AOF 关闭 */
+
+#define REDIS_AOF_ON 1              /* AOF 开启 */
+
+#define REDIS_AOF_WAIT_REWRITE 2    /* 在线修改 为 appendonly yes 的时候 正在rewrite */</pre></td></tr></table>
+</div>
+</div>
+<h4 id="3-2-重要变量">3.2 重要变量</h4>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span></pre></td>
+<td class="lntd">
+<pre class="chroma"># 要刷到AOF文件的数据，string类型
+
+server.aof_buf      
+
+# rewrite 期间，执行的命令缓存 ，是一个链表
+
+server.aof_rewrite_buf_blocks
+
+#距上次rewrite之后 AOF 刷了多少数据，每次rewrite之后清空
+
+server.aof_current_size
+
+#上一次rewrite的时候，AOF数据大小
+
+server.aof_rewrite_base_size</pre></td></tr></table>
+</div>
+</div>
+<h3 id="4-aof-rewrite">4. AOF rewrite</h3>
+
+<p>假如 一直往一个文件中追加命令，那想想，那一个文件不是有可能无限大了？</p>
+
+<p>再想想，假如一个key写一1000万次，那这key就得重现1000万次，那感觉是不是不爽？</p>
+
+<p>所以作者也实现了  AOF rewrite，在一定情况下，将内存中的数据镜像的形式刷到文件，然后在那个时间点之后再进行 命令追加的形式保存</p>
+
+<h4 id="4-1-aof-rewrite-开启一个子进程">4.1 AOF rewrite 开启一个子进程</h4>
+
+<p>和 RDB 开启一个子进程一样，以 copy on write 的技术开启一个子进程</p>
+
+<p><img src="/images/redis/aof_child_process_code_1.png" alt="image" /></p>
+
+<h4 id="4-2-aof-rewrite-刷盘过程">4.2 AOF rewrite 刷盘过程</h4>
+
+<p><img src="/images/redis/aof_rewrite_process.png" alt="image" /></p>
+
+<p>4.2.1 创建一个 temp-rewriteaof-%d.aof 文件，并打开</p>
+
+<p>4.2.2 将 aof rewrite 镜像数据以二进制形式追加到文件 temp-rewriteaof-%d.aof（这个过程是到内核）</p>
+
+<p>4.2.3 每 32MB 数据将数据从内核fsync方式刷到磁盘</p>
+
+<p>4.2.4 关闭句柄</p>
+
+<p>4.2.5 将 temp-rewriteaof-%d.aof 改名为 temp-rewriteaof-bg-$pid.aof</p>
+
+<h4 id="4-3-aof-rewrite-子进程结束之后回调">4.3 AOF rewrite 子进程结束之后回调</h4>
+
+<p>在 aof rewrite 子进程结束之后，由<font color="#FOO">主进程</font>回调函数，根据  appendfsync 配置进行一次刷盘调用</p>
+
+<p><img src="/images/redis/aof_child_process_code_2.png" alt="image" /></p>
+
+<p><img src="/images/redis/aof_child_process_code_3.png" alt="image" /></p>
+
+<p>1). 在rewrite期间新增的数据 追加到 temp-rewriteaof-bg-$pid.aof</p>
+
+<p><img src="/images/redis/aof_child_process_code_4.png" alt="image" /></p>
+
+<p>2). 将AOF文件名修改为 appendonly.aof</p>
+
+<p>3). aways 刷盘模式而主线程立马调aof_fsync 刷盘</p>
+
+<p>4). everysec 刷盘模式而提交给另外一个线程异步刷盘</p>
+
+<p>5). 提交给关闭句柄的线程，关闭 旧的AOF文件句柄</p>
+
+<h4 id="4-4-aof-rewrite-触发">4.4 AOF rewrite 触发</h4>
+
+<p><strong>4.4.1 定时触发</strong></p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span></pre></td>
+<td class="lntd">
+<pre class="chroma">  /* Trigger an AOF rewrite if needed */
+         if (server.rdb_child_pid == -1 &amp;&amp;
+             server.aof_child_pid == -1 &amp;&amp;
+             server.aof_rewrite_perc &amp;&amp;
+             server.aof_current_size &gt; server.aof_rewrite_min_size)
+         {
+            long long base = server.aof_rewrite_base_size ?
+                            server.aof_rewrite_base_size : 1;
+            long long growth = (server.aof_current_size*100/base) - 100;
+            if (growth &gt;= server.aof_rewrite_perc) {
+                redisLog(REDIS_NOTICE,&#34;Starting automatic rewriting of AOF on %lld%% growth&#34;,growth);
+                rewriteAppendOnlyFileBackground();
+            }
+         }</pre></td></tr></table>
+</div>
+</div>
+<p>1). 默认100ms 检测一次</p>
+
+<p>2). 没有rdb,aof rewrite 正在执行</p>
+
+<p>3). 当前AOF数据大小 大于 设置的最小rewrite大小 ，默认64MB（auto-aof-rewrite-min-size参数）</p>
+
+<p>4).  (server.aof_current_size*100/base) - 100 &gt;= server.aof_rewrite_perc
+    当前AOF数据大小 是否是上一次的多少倍，默认为 1 倍 （auto-aof-rewrite-percentage 参数）</p>
+
+<p><strong>4.4.2 手工触发 - BGREWRITEAOF 命令</strong></p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span></pre></td>
+<td class="lntd">
+<pre class="chroma">void bgrewriteaofCommand(redisClient *c) {
+    if (server.aof_child_pid != -1) {
+        addReplyError(c,&#34;Background append only file rewriting already in progress&#34;);
+    } else if (server.rdb_child_pid != -1) {
+        server.aof_rewrite_scheduled = 1;
+        addReplyStatus(c,&#34;Background append only file rewriting scheduled&#34;);
+    } else if (rewriteAppendOnlyFileBackground() == REDIS_OK) {
+        addReplyStatus(c,&#34;Background append only file rewriting started&#34;);
+    } else {
+        addReply(c,shared.err);
+    }
+}</pre></td></tr></table>
+</div>
+</div>
+<p>立马开启一个子进程进行rewrite</p>
+
+<p>但命令结果返回给客户端之后不一定rewrite完了</p>
+
+<p><strong>4.4.3 手工触发 - CONFIG appendonly yes</strong></p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span></pre></td>
+<td class="lntd">
+<pre class="chroma">  } else if (!strcasecmp(c-&gt;argv[2]-&gt;ptr,&#34;appendonly&#34;)) {
+        int enable = yesnotoi(o-&gt;ptr);
+
+        if (enable == -1) goto badfmt;
+        if (enable == 0 &amp;&amp; server.aof_state != REDIS_AOF_OFF) {
+            stopAppendOnly();
+        } else if (enable &amp;&amp; server.aof_state == REDIS_AOF_OFF) {
+            if (startAppendOnly() == REDIS_ERR) {
+                addReplyError(c,
+                    &#34;Unable to turn on AOF. Check server logs.&#34;);
+                return;
+            }
+        }
+    }</pre></td></tr></table>
+</div>
+</div><div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span></pre></td>
+<td class="lntd">
+<pre class="chroma">/* Called when the user switches from &#34;appendonly no&#34; to &#34;appendonly yes&#34;
+ * at runtime using the CONFIG command. */
+int startAppendOnly(void) {
+    server.aof_last_fsync = server.unixtime;
+    server.aof_fd = open(server.aof_filename,O_WRONLY|O_APPEND|O_CREAT,0644);
+    redisAssert(server.aof_state == REDIS_AOF_OFF);
+    if (server.aof_fd == -1) {
+        redisLog(REDIS_WARNING,&#34;Redis needs to enable the AOF but can&#39;t open the append only file: %s&#34;,strerror(errno));
+        return REDIS_ERR;
+    }
+    if (rewriteAppendOnlyFileBackground() == REDIS_ERR) {
+        close(server.aof_fd);
+        redisLog(REDIS_WARNING,&#34;Redis needs to enable the AOF but can&#39;t trigger a background AOF rewrite operation. Check the above logs for more info about the error.&#34;);
+        return REDIS_ERR;
+    }
+    /* We correctly switched on AOF, now wait for the rerwite to be complete
+     * in order to append data on disk. */
+    server.aof_state = REDIS_AOF_WAIT_REWRITE;
+    return REDIS_OK;
+}</pre></td></tr></table>
+</div>
+</div>
+<p>当原本是关闭的情况下</p>
+
+<p>立马开一个子进程rewrite</p>
+
+<p><font color="#F00">假如rewrite失败了，每次定时任务都会尝试重试rewrite</font></p>
+
+<h3 id="5-redis-写命令">5. Redis 写命令</h3>
+
+<p>每条写命令在更新了内存之后，都会有一个buf 来保存每命令的数据，不管 appendfsync  配置的是什么参数，这个buf 都是 Redis 自已的，并不是刷到内核里</p>
+
+<p><img src="/images/redis/aof_append_1.png" alt="image" /></p>
+
+<p>1) . 只要开启了 AOF，就写到 server.aof_buf</p>
+
+<p>2）. 假如开启了rewrite进程 期间，将数据额外追加一份到  server.aof_rewrite_buf_blocks。这份数据是用于在 AOF rewrite 进程退出之后，立马将这份数据刷到 aof 文件末尾的</p>
+
+<h3 id="6-appendfsync-everysec">6. appendfsync everysec</h3>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span></pre></td>
+<td class="lntd">
+<pre class="chroma"> /* AOF postponed flush: Try at every cron cycle if the slow fsync
+     * completed. */
+    if (server.aof_flush_postponed_start) flushAppendOnlyFile(0);
+
+    /* AOF write errors: in this case we have a buffer to flush as well and
+     * clear the AOF error in case of success to make the DB writable again,
+     * however to try every second is enough in case of &#39;hz&#39; is set to
+     * an higher frequency. */
+    run_with_period(1000) {
+        if (server.aof_last_write_status == REDIS_ERR)
+            flushAppendOnlyFile(0);
+    }</pre></td></tr></table>
+</div>
+</div>
+<p>1). 每秒触发一次调用刷盘函数</p>
+
+<p>2). 每次调用函数刷盘，会判断上一次刷盘是否完成，</p>
+
+<p>如果没有完成，则100ms后的定时任务继续调用</p>
+
+<p><img src="/images/redis/aof_append_2.png" alt="image" /></p>
+
+<p>3). 将数据从buf刷到内核</p>
+
+<p><img src="/images/redis/aof_append_3.png" alt="image" /></p>
+
+<p>4). 提交给另外一个线程 异步调用aof_fsync 将数据从内核刷到磁盘</p>
+
+<h3 id="7-appendfsync-aways">7. appendfsync aways</h3>
+
+<p>每条命令都刷盘一次</p>
+
+<p><img src="/images/redis/aof_append_4.png" alt="image" /></p>
+
+<p>1). 每个事件处理之前 将server.aof_buf 里的数据刷到内核。记住并不是每条命令之后立马将数据落盘，而是等待下一个事件执行之前落盘</p>
+
+<p><img src="/images/redis/aof_append_5.png" alt="image" /></p>
+
+<p><img src="/images/redis/aof_append_6.png" alt="image" /></p>
+
+<p>2). 主线程调用 aof_fsync 从内核刷到磁盘。这里是由主线程执行调用 fsync 刷到磁盘</p>
+
+<h3 id="8-appendfsync-no">8. appendfsync  no</h3>
+
+<p>1). 每个事件处理之前 将server.aof_buf 里的数据刷到内核</p>
+
+<p>2). 将 buf 刷到内核之后，将由内核决定什么时候刷到磁盘，redis 进程不再接管flush这个事情</p>
+
+<h3 id="9-小结">9. 小结</h3>
+
+<p>1). AOF 也会有rewrite刷盘,也是开子进程，cony on write</p>
+
+<p>2). AOF 默认情况下是 当前AOF数据大小是上一次rewrite的倍的时候触发</p>
+
+<p>3). AOF everysec 刷盘，是每秒从buf刷到内核后fsync刷到磁盘, 并不是每条命令就往内核里刷一次数据</p>
+
+<p>4). AOF aways 刷盘，是写命令后的下一个事件执行之前由主线程执行刷盘的，并非写命令之后立马刷盘</p>
+
+    </div>
+
+    <div class="post-copyright">
+  <p class="copyright-item">
+    <span class="item-title">文章作者</span>
+    <span class="item-content">jc3wish</span>
+  </p>
+  <p class="copyright-item">
+    <span class="item-title">上次更新</span>
+    <span class="item-content">
+        2019-12-02
+        
+    </span>
+  </p>
+  
+  
+</div>
+<footer class="post-footer">
+      <div class="post-tags">
+          <a href="/tags/redis/">Redis</a>
+          </div>
+      <nav class="post-nav">
+        
+        <a class="next" href="/post/redis/redis_rdb_storage/">
+            <span class="next-text nav-default">Redis RDB 存储协议</span>
+            <span class="next-text nav-mobile">下一篇</span>
+            <i class="iconfont icon-right"></i>
+          </a>
+      </nav>
+    </footer>
+  </article>
+        </div>
+        <div id="comments-gitment"></div>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/theme-next/theme-next-gitment@1/default.min.css" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/gh/theme-next/theme-next-gitment@1/gitment.browser.min.js" crossorigin="anonymous"></script>
+    <script type="text/javascript">
+      var gitment = new Gitment({
+        id: '2019-12-02 23:38:26 \x2b0800 CST',
+        title: 'Redis AOF 持久化 实现原理',
+        link: decodeURI(location.href),
+        desc: '1. AOF 概念 From now on, every time Redis receives a command that changes the dataset (e.g. SET) it will append it to the AOF. When you restart Redis it will re-play the AOF to rebuild the state. 写入的命令以追加到文件的形式保存到文件中 重启的时候对命令进行重',
+        owner: 'jc3wish',
+        repo: 'jc3wish.github.io.comment',
+        oauth: {
+          client_id: 'f3281f42aa53efc269d3',
+          client_secret: 'd01f916754cbbe5e9e856941a7e8161d547d135d'
+        }
+      });
+      gitment.render('comments-gitment');
+    </script>
+    <noscript>Please enable JavaScript to view the <a href="https://github.com/imsun/gitment">comments powered by gitment.</a></noscript>
+
+  
+
+  
+
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="social-links">
+      <a href="mailto:jc3wish@126.com" class="iconfont icon-email" title="email"></a>
+      <a href="https://github.com/jc3wish" class="iconfont icon-github" title="github"></a>
+  <a href="https://jc3wish.github.io/index.xml" type="application/rss+xml" class="iconfont icon-rss" title="rss"></a>
+</div>
+
+<div class="copyright">
+  <span class="power-by">
+    由 <a class="hexo-link" href="https://gohugo.io">Hugo</a> 强力驱动
+  </span>
+  <span class="division">|</span>
+  <span class="theme-info">
+    主题 - 
+    <a class="theme-link" href="https://github.com/olOwOlo/hugo-theme-even">Even</a>
+  </span>
+
+  
+
+  <span class="copyright-year">
+    &copy; 
+    2019
+    <span class="heart">
+      <i class="iconfont icon-heart"></i>
+    </span>
+    <span class="author">jc3wish</span>
+  </span>
+</div>
+    </footer>
+
+    <div class="back-to-top" id="back-to-top">
+      <i class="iconfont icon-up"></i>
+    </div>
+  </div>
+  
+  <script src="https://cdn.jsdelivr.net/npm/jquery@3.2.1/dist/jquery.min.js" integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4=" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/slideout@1.0.1/dist/slideout.min.js" integrity="sha256-t+zJ/g8/KXIJMjSVQdnibt4dlaDxc9zXr/9oNPeWqdg=" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@3.1.20/dist/jquery.fancybox.min.js" integrity="sha256-XVLffZaxoWfGUEbdzuLi7pwaUJv1cecsQJQqGLe7axY=" crossorigin="anonymous"></script>
+<script type="text/javascript" src="/dist/even.26188efa.min.js"></script>
+
+
+
+
+
+
+
+
+</body>
+</html>
