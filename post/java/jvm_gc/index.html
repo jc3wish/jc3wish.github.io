@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-  <title>JAVA JVM 堆内存 GC 及 内存分配 - jc3wish blog</title>
+  <title>JAVA JVM 堆内存 GC 及 内存分配 -- CMS 收集器 - jc3wish blog</title>
   <meta name="renderer" content="webkit" />
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
 
@@ -16,7 +16,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="#f8f5ec">
 
 
-<meta name="author" content="jc3wish" /><meta name="description" content="JAVA 中 分堆内存 和 堆外内存 堆外内存不是由JVM控制的，这个得开发人员自己手工调用方法去释放 堆内内存是由JVM控制，可以由JVM 通过算法自动 GC JAVA 在" /><meta name="keywords" content="Bifrost, Jc3wish" />
+<meta name="author" content="jc3wish" /><meta name="description" content="JAVA 中 分堆内存 和 堆外内存 堆外内存不是由JVM控制的，这个得开发人员自己手工调用方法去释放 堆内内存是由JVM控制，可以由JVM 通过算法自动 GC JVM 垃" /><meta name="keywords" content="Bifrost, Jc3wish" />
 
 
 
@@ -38,26 +38,26 @@
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@3.1.20/dist/jquery.fancybox.min.css" integrity="sha256-7TyXnr2YU040zfSP+rEcz29ggW4j56/ujTPwjMzyqFY=" crossorigin="anonymous">
 
 
-<meta property="og:title" content="JAVA JVM 堆内存 GC 及 内存分配" />
-<meta property="og:description" content="JAVA 中 分堆内存 和 堆外内存 堆外内存不是由JVM控制的，这个得开发人员自己手工调用方法去释放 堆内内存是由JVM控制，可以由JVM 通过算法自动 GC JAVA 在" />
+<meta property="og:title" content="JAVA JVM 堆内存 GC 及 内存分配 -- CMS 收集器" />
+<meta property="og:description" content="JAVA 中 分堆内存 和 堆外内存 堆外内存不是由JVM控制的，这个得开发人员自己手工调用方法去释放 堆内内存是由JVM控制，可以由JVM 通过算法自动 GC JVM 垃" />
 <meta property="og:type" content="article" />
 <meta property="og:url" content="https://jc3wish.github.io/post/java/jvm_gc/" />
-<meta property="article:published_time" content="2019-12-04T23:06:26+08:00" />
-<meta property="article:modified_time" content="2019-12-04T23:06:26+08:00" />
-<meta itemprop="name" content="JAVA JVM 堆内存 GC 及 内存分配">
-<meta itemprop="description" content="JAVA 中 分堆内存 和 堆外内存 堆外内存不是由JVM控制的，这个得开发人员自己手工调用方法去释放 堆内内存是由JVM控制，可以由JVM 通过算法自动 GC JAVA 在">
+<meta property="article:published_time" content="2019-12-05T22:06:26+08:00" />
+<meta property="article:modified_time" content="2019-12-05T22:06:26+08:00" />
+<meta itemprop="name" content="JAVA JVM 堆内存 GC 及 内存分配 -- CMS 收集器">
+<meta itemprop="description" content="JAVA 中 分堆内存 和 堆外内存 堆外内存不是由JVM控制的，这个得开发人员自己手工调用方法去释放 堆内内存是由JVM控制，可以由JVM 通过算法自动 GC JVM 垃">
 
 
-<meta itemprop="datePublished" content="2019-12-04T23:06:26&#43;08:00" />
-<meta itemprop="dateModified" content="2019-12-04T23:06:26&#43;08:00" />
-<meta itemprop="wordCount" content="1297">
+<meta itemprop="datePublished" content="2019-12-05T22:06:26&#43;08:00" />
+<meta itemprop="dateModified" content="2019-12-05T22:06:26&#43;08:00" />
+<meta itemprop="wordCount" content="1373">
 
 
 
 <meta itemprop="keywords" content="JAVA,JVM," />
 <meta name="twitter:card" content="summary"/>
-<meta name="twitter:title" content="JAVA JVM 堆内存 GC 及 内存分配"/>
-<meta name="twitter:description" content="JAVA 中 分堆内存 和 堆外内存 堆外内存不是由JVM控制的，这个得开发人员自己手工调用方法去释放 堆内内存是由JVM控制，可以由JVM 通过算法自动 GC JAVA 在"/>
+<meta name="twitter:title" content="JAVA JVM 堆内存 GC 及 内存分配 -- CMS 收集器"/>
+<meta name="twitter:description" content="JAVA 中 分堆内存 和 堆外内存 堆外内存不是由JVM控制的，这个得开发人员自己手工调用方法去释放 堆内内存是由JVM控制，可以由JVM 通过算法自动 GC JVM 垃"/>
 
 <!--[if lte IE 9]>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/classlist/1.1.20170427/classList.min.js"></script>
@@ -88,6 +88,8 @@
         <li class="mobile-menu-item">归档</li>
       </a><a href="/categories/">
         <li class="mobile-menu-item">分类</li>
+      </a><a href="/about">
+        <li class="mobile-menu-item">自我介绍</li>
       </a><a href="https://github.com/brokercap/Bifrost">
         <li class="mobile-menu-item">Bifrost</li>
       </a><a href="http://jc3wish.github.io/rabbitmq_doc">
@@ -110,6 +112,8 @@
       </li><li class="menu-item">
         <a class="menu-item-link" href="/categories/">分类</a>
       </li><li class="menu-item">
+        <a class="menu-item-link" href="/about">自我介绍</a>
+      </li><li class="menu-item">
         <a class="menu-item-link" href="https://github.com/brokercap/Bifrost">Bifrost</a>
       </li><li class="menu-item">
         <a class="menu-item-link" href="http://jc3wish.github.io/rabbitmq_doc">RabbitMQ源码解析</a>
@@ -124,10 +128,10 @@
           <article class="post">
     
     <header class="post-header">
-      <h1 class="post-title">JAVA JVM 堆内存 GC 及 内存分配</h1>
+      <h1 class="post-title">JAVA JVM 堆内存 GC 及 内存分配 -- CMS 收集器</h1>
 
       <div class="post-meta">
-        <span class="post-time"> 2019-12-04 </span>
+        <span class="post-time"> 2019-12-05 </span>
         <div class="post-category">
             <a href="/categories/java/"> JAVA </a>
             </div>
@@ -171,6 +175,10 @@
 <p>堆外内存不是由JVM控制的，这个得开发人员自己手工调用方法去释放</p>
 
 <p>堆内内存是由JVM控制，可以由JVM 通过算法自动 GC</p>
+
+<p>JVM 垃圾回收有很多种收集器，我们这里讲的是CMS收集器，G1 收集器我们这里不做讲解</p>
+
+<p>并且JAVA8 及以前版本默认是采用  CMS 收集器的，JAVA9及以后默认是G1</p>
 
 <p>JAVA 在 JVM 启动的时候，就事先对堆内存进行了划分了几个模块</p>
 
@@ -293,7 +301,7 @@
   <p class="copyright-item">
     <span class="item-title">上次更新</span>
     <span class="item-content">
-        2019-12-04
+        2019-12-05
         
     </span>
   </p>
@@ -321,10 +329,10 @@
     <script src="https://cdn.jsdelivr.net/gh/theme-next/theme-next-gitment@1/gitment.browser.min.js" crossorigin="anonymous"></script>
     <script type="text/javascript">
       var gitment = new Gitment({
-        id: '2019-12-04 23:06:26 \x2b0800 CST',
-        title: 'JAVA JVM 堆内存 GC 及 内存分配',
+        id: '2019-12-05 22:06:26 \x2b0800 CST',
+        title: 'JAVA JVM 堆内存 GC 及 内存分配 -- CMS 收集器',
         link: decodeURI(location.href),
-        desc: 'JAVA 中 分堆内存 和 堆外内存 堆外内存不是由JVM控制的，这个得开发人员自己手工调用方法去释放 堆内内存是由JVM控制，可以由JVM 通过算法自动 GC JAVA 在',
+        desc: 'JAVA 中 分堆内存 和 堆外内存 堆外内存不是由JVM控制的，这个得开发人员自己手工调用方法去释放 堆内内存是由JVM控制，可以由JVM 通过算法自动 GC JVM 垃',
         owner: 'jc3wish',
         repo: 'jc3wish.github.io.comment',
         oauth: {

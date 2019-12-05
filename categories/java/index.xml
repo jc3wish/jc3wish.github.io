@@ -6,18 +6,18 @@
     <description>Recent content in JAVA on jc3wish blog</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en</language>
-    <lastBuildDate>Wed, 04 Dec 2019 23:06:26 +0800</lastBuildDate>
+    <lastBuildDate>Thu, 05 Dec 2019 22:06:26 +0800</lastBuildDate>
     
 	<atom:link href="https://jc3wish.github.io/categories/java/index.xml" rel="self" type="application/rss+xml" />
     
     
     <item>
-      <title>JAVA JVM 堆内存 GC 及 内存分配</title>
+      <title>JAVA JVM 堆内存 GC 及 内存分配 -- CMS 收集器</title>
       <link>https://jc3wish.github.io/post/java/jvm_gc/</link>
-      <pubDate>Wed, 04 Dec 2019 23:06:26 +0800</pubDate>
+      <pubDate>Thu, 05 Dec 2019 22:06:26 +0800</pubDate>
       
       <guid>https://jc3wish.github.io/post/java/jvm_gc/</guid>
-      <description>JAVA 中 分堆内存 和 堆外内存 堆外内存不是由JVM控制的，这个得开发人员自己手工调用方法去释放 堆内内存是由JVM控制，可以由JVM 通过算法自动 GC JAVA 在</description>
+      <description>JAVA 中 分堆内存 和 堆外内存 堆外内存不是由JVM控制的，这个得开发人员自己手工调用方法去释放 堆内内存是由JVM控制，可以由JVM 通过算法自动 GC JVM 垃</description>
     </item>
     
   </channel>

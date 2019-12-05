@@ -3,56 +3,63 @@
   
   <url>
     <loc>https://jc3wish.github.io/categories/</loc>
-    <lastmod>2019-12-04T23:06:26+08:00</lastmod>
+    <lastmod>2019-12-05T22:06:26+08:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.5</priority>
   </url>
   
   <url>
     <loc>https://jc3wish.github.io/tags/java/</loc>
-    <lastmod>2019-12-04T23:06:26+08:00</lastmod>
+    <lastmod>2019-12-05T22:06:26+08:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.5</priority>
   </url>
   
   <url>
     <loc>https://jc3wish.github.io/categories/java/</loc>
-    <lastmod>2019-12-04T23:06:26+08:00</lastmod>
+    <lastmod>2019-12-05T22:06:26+08:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.5</priority>
   </url>
   
   <url>
     <loc>https://jc3wish.github.io/post/java/jvm_gc/</loc>
-    <lastmod>2019-12-04T23:06:26+08:00</lastmod>
+    <lastmod>2019-12-05T22:06:26+08:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.5</priority>
   </url>
   
   <url>
     <loc>https://jc3wish.github.io/</loc>
-    <lastmod>2019-12-04T23:06:26+08:00</lastmod>
+    <lastmod>2019-12-05T22:06:26+08:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.5</priority>
   </url>
   
   <url>
     <loc>https://jc3wish.github.io/tags/jvm/</loc>
-    <lastmod>2019-12-04T23:06:26+08:00</lastmod>
+    <lastmod>2019-12-05T22:06:26+08:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.5</priority>
   </url>
   
   <url>
     <loc>https://jc3wish.github.io/post/</loc>
-    <lastmod>2019-12-04T23:06:26+08:00</lastmod>
+    <lastmod>2019-12-05T22:06:26+08:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.5</priority>
   </url>
   
   <url>
     <loc>https://jc3wish.github.io/tags/</loc>
-    <lastmod>2019-12-04T23:06:26+08:00</lastmod>
+    <lastmod>2019-12-05T22:06:26+08:00</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  
+  <url>
+    <loc>https://jc3wish.github.io/about/</loc>
+    <lastmod>2019-12-05T21:51:26+08:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.5</priority>
   </url>
