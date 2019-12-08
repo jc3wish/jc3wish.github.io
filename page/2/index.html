@@ -45,7 +45,7 @@
 <meta property="og:type" content="website" />
 <meta property="og:url" content="https://jc3wish.github.io/" />
 
-<meta property="og:updated_time" content="2019-12-05T22:06:26+08:00" />
+<meta property="og:updated_time" content="2019-12-08T18:39:26+08:00" />
 <meta itemprop="name" content="jc3wish blog">
 <meta itemprop="description" content="Hugo theme even example site.">
 
@@ -120,6 +120,27 @@
       <div class="content-wrapper">
         <div id="content" class="content">
           <section id="posts" class="posts">
+    <article class="post">
+  <header class="post-header">
+    <h1 class="post-title"><a class="post-link" href="/post/redis/initserver_about/">Redis启动概述</a></h1>
+    <div class="post-meta">
+      <span class="post-time"> 2019-12-02 </span>
+      <div class="post-category">
+          <a href="/categories/redis/"> Redis </a>
+          </div>
+    </div>
+  </header>
+  
+  <div class="post-content">
+    <div class="post-summary">
+      Redis 启动的时候 ./redis-server 0.0.0.0:6379 做了如下事情: 1. tcp 端口 和 unix socket 文件监控 2. 默认情况下设置一个100ms的定时器 可以通过配置文件的 hz 配置来修改这个值,默认是10,
+    </div>
+    <div class="read-more">
+      <a href="/post/redis/initserver_about/" class="read-more-link">阅读更多</a>
+    </div>
+  </div>
+</article>
+
     <article class="post">
   <header class="post-header">
     <h1 class="post-title"><a class="post-link" href="/post/redis_slots_request_1/">Redis slots 槽的数量为什么是16384,而不是65536,也是不8192 ?</a></h1>

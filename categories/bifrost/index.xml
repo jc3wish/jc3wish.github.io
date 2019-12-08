@@ -6,10 +6,19 @@
     <description>Recent content in Bifrost on jc3wish blog</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en</language>
-    <lastBuildDate>Sun, 20 Oct 2019 23:26:08 +0800</lastBuildDate>
+    <lastBuildDate>Sun, 08 Dec 2019 18:39:26 +0800</lastBuildDate>
     
 	<atom:link href="https://jc3wish.github.io/categories/bifrost/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>Bifrost v1.1.0-release 版本发布</title>
+      <link>https://jc3wish.github.io/post/bifrost/bifrost_v1.1.0.publish/</link>
+      <pubDate>Sun, 08 Dec 2019 18:39:26 +0800</pubDate>
+      
+      <guid>https://jc3wish.github.io/post/bifrost/bifrost_v1.1.0.publish/</guid>
+      <description>Bifrost v1.1.0-release 发布了 经过了 21 个 beta 版本的跌代 无数个夜晚 写了 5.2万 代码 支持了 所有 MySQL 版本 Binlog 解析 实现了 每个表不同目标库多线程并行同步 修复了 N 个 bug 实现了 12 个同</description>
+    </item>
     
     <item>
       <title>Bifrost 开发进度 20191020</title>
