@@ -6,10 +6,19 @@
     <description>Recent content on jc3wish blog</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en</language>
-    <lastBuildDate>Sun, 08 Dec 2019 18:39:26 +0800</lastBuildDate>
+    <lastBuildDate>Sat, 12 Sep 2020 09:46:26 +0800</lastBuildDate>
     
 	<atom:link href="https://jc3wish.github.io/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>感谢Bifrost用户的坚持</title>
+      <link>https://jc3wish.github.io/post/bifrost/to_user_thx_20200912/</link>
+      <pubDate>Sat, 12 Sep 2020 09:46:26 +0800</pubDate>
+      
+      <guid>https://jc3wish.github.io/post/bifrost/to_user_thx_20200912/</guid>
+      <description>非常感谢 大家的 支持 Bifrost 当前更新了 v1.4.3 版本 在这个过程中不少用户,也踩了不少的坑 如果没有大家的坚持, Bifrost 可能至今都还有不少bug没有被发现 Bifrost 以后会再接</description>
+    </item>
     
     <item>
       <title>Bifrost v1.1.0-release 版本发布</title>
